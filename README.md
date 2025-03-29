@@ -2,29 +2,24 @@
 
 ## Phase 1: Setup and Architecture (2 days)
 
-### Day 1: Project Setup
-- [ ] Set up project structure:
-  - Client: HTML/CSS/JS using mini-framework
-  - Server: Golang WebSocket server
-- [ ] Initialize version control (Git)
-- [ ] Create basic build system (simple Makefile or scripts)
-- [ ] Set up performance monitoring tools (FPS counter, frame timing)
-
-### Day 2: Architecture Design
-- [ ] Design WebSocket protocol schema for game messages
-- [ ] Design game state structure (shared between client and server)
-- [ ] Plan client-side game loop using requestAnimationFrame
-- [ ] Design component system for game entities (players, bombs, etc.)
+###  Architecture Design
+- [x] Design WebSocket protocol schema for game messages
+- [x] Design game state structure (shared between client and server)
+- [x] Plan client-side game loop using requestAnimationFrame
+- [x] Design component system for game entities (players, bombs, etc.)
 
 ## Phase 2: Core Game Implementation (5 days)
 
-###  Map System
+###  Map System (component)
+make component tilemap have this property
 - [ ] Implement fixed map layout with walls and destructible blocks
 - [ ] Create random block generation algorithm
 - [ ] Ensure valid player starting positions in corners
 - [ ] Implement map rendering using mini-framework DOM manipulation
 
-###  Player Mechanics
+###  Player Mechanics (component)
+make player component can change x,y and name of player
+you can make 2 component cuurplayer and autherPlayers or collection them
 - [ ] Implement player movement (4-directional)
 - [ ] Add bomb placement logic
 - [ ] Create explosion mechanics (4-directional)
@@ -45,6 +40,7 @@
 - [ ] Test with simulated heavy load
 
 ### Multiplayer Basics
+here you should make websocket as have lot of types (status player join event ...)
 - [ ] Implement WebSocket connection handling
 - [ ] Create player synchronization
 - [ ] Handle client prediction for smooth movement
