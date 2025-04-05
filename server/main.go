@@ -11,6 +11,9 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
+	// Serve all files from the "public" directory directly
+	// fs := http.FileServer(http.Dir("../Assets"))
+	// http.Handle("/Assets/", http.StripPrefix("/Assets/", fs))
 	mux.HandleFunc("/public/", handlePublicFile)
 	mux.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
 		tmpl, err := template.ParseFiles("../client/index.html")
@@ -33,6 +36,7 @@ func main() {
 
 func handlePublicFile(w http.ResponseWriter, r *http.Request) {
 	filePath := r.URL.Path[len("/public/"):]
+	println(filePath)
 	fullPath := "../client/" + filePath
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 		http.Error(w, "404 File not found ----", http.StatusNotFound)
@@ -40,4 +44,3 @@ func handlePublicFile(w http.ResponseWriter, r *http.Request) {
 	}
 	http.ServeFile(w, r, fullPath)
 }
-

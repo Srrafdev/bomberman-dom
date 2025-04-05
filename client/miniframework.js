@@ -1,4 +1,4 @@
-function createVDOM(tag, attrs, ...children) {
+function vdm(tag, attrs, ...children) {
   if (typeof tag === "function") {
     return tag({ ...attrs, children });
   }
@@ -245,7 +245,7 @@ const myEventSystem = {
   }
 };
 
-export { createVDOM, route, handleLocation, setRoutes, setRoot, StateManagement, myEventSystem, renderComponent };
+export { vdm, route, handleLocation, setRoutes, setRoot, StateManagement, myEventSystem, renderComponent };
 
 //==================== rachid router
 export class Router {
@@ -287,9 +287,9 @@ export class Router {
   }
 
   defaultNotFound() {
-    return () => createVDOM("div", {},
-      createVDOM("h1", {}, "404 - Page Not Found"),
-      createVDOM("button", { onClick: () => this.link("/") }, "Go Home")
+    return () => vdm("div", {},
+      vdm("h1", {}, "404 - Page Not Found"),
+      vdm("button", { onClick: () => this.link("/") }, "Go Home")
     );
   }
 }
