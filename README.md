@@ -12,10 +12,10 @@
 
 ###  Map System (component)
 make component tilemap have this property
-- [ ] Implement fixed map layout with walls and destructible blocks
-- [ ] Create random block generation algorithm
+- [x] Implement fixed map layout with walls and destructible blocks
+- [x] Create random block generation algorithm
 - [ ] Ensure valid player starting positions in corners
-- [ ] Implement map rendering using mini-framework DOM manipulation
+- [x] Implement map rendering using mini-framework DOM manipulation
 
 ###  Player Mechanics (component)
 make player component can change x,y and name of player
