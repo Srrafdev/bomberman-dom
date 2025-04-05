@@ -19,9 +19,23 @@ export default class TileMap {
     ];
     for (let row = 0; row < this.map.length; row++) {
       for (let col = 0; col < this.map[row].length; col++) {
+        const positionPlayrs = [
+          [1, 1], //p1
+          [1, 2],
+          [2, 1],
+          [1, 13],// p2
+          [1, 12],
+          [2, 13],
+          [9, 1], // p3
+          [8, 1],
+          [9, 2],
+          [9, 13], //p4
+          [8, 13],
+          [9, 12]
+        ];
 
-        if ((row === 1 && col === 1) || (row === 1 && col === 2) || (row === 2 && col === 1)) {
-          this.map[row][col] = 3
+        if (positionPlayrs.some(([r, c]) => r === row && c === col)) {
+          this.map[row][col] = 4
 
         } else if (this.map[row][col] === 0) {
           let por = [2, 2, 2, 3, 3, 3, 3, 3, 3, 3]
@@ -62,7 +76,8 @@ export default class TileMap {
           1.7: "down",
           1.8: "downRight",
           2: "tree",
-          3: "grass"
+          3: "grass",
+          4: "box"
         };
         const className = tileClasses[tileValue];
         if (className) {

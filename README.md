@@ -14,7 +14,7 @@
 make component tilemap have this property
 - [x] Implement fixed map layout with walls and destructible blocks
 - [x] Create random block generation algorithm
-- [ ] Ensure valid player starting positions in corners
+- [x] Ensure valid player starting positions in corners
 - [x] Implement map rendering using mini-framework DOM manipulation
 
 ###  Player Mechanics (component)
