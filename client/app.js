@@ -14,7 +14,7 @@ function Home() {
     tileMap.draw()
   }, 10);
 
-  return vdm("div", { id: "game-container" }, "",)
+  return vdm("div", { id: "game-container" })
 }
 
 function About() {

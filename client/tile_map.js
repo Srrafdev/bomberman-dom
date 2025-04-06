@@ -35,7 +35,7 @@ export default class TileMap {
         ];
 
         if (positionPlayrs.some(([r, c]) => r === row && c === col)) {
-          this.map[row][col] = 4
+          this.map[row][col] = 3
 
         } else if (this.map[row][col] === 0) {
           let por = [2, 2, 2, 3, 3, 3, 3, 3, 3, 3]
