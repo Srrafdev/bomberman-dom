@@ -1,0 +1,26 @@
+:root {
+  --EmotesNumber: 0;
+  --EmotesSteps: 1;
+}
+
+.emotes_cat {
+  background-image: url('Assets/Sprout Lands - Sprites - Basic pack/Sprout Lands - UI Pack - Basic pack/Sprite sheets/Dialouge UI/Emotes/Teemo Basic emote animations sprite sheet.png');
+  width: 32px;
+  height: 32px;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  transform: scale(1.5  );
+  background-position: 0 calc(var(--EmotesNumber)*-32px);
+  animation: playEmote 1s steps(var(--EmotesSteps)) infinite;
+}
+
+@keyframes playEmote {
+  from {
+    background-position-x: 0;
+  }
+
+  to {
+    background-position-x: calc(var(--EmotesSteps)*-32px);
+    /* 8 frames * 32px = 256px */
+  }
+}
