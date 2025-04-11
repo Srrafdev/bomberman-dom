@@ -37,6 +37,7 @@ func main() {
 func handlePublicFile(w http.ResponseWriter, r *http.Request) {
 	filePath := r.URL.Path[len("/public/"):]
 	fullPath := "../client/" + filePath
+	fmt.Println(fullPath,"++", filePath)
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 		http.Error(w, "404 File not found ----", http.StatusNotFound)
 		return

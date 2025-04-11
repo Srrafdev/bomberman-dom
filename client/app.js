@@ -9,7 +9,6 @@ const router = new Router(renderComponent)
 function Home() {
   setTimeout(() => {
     const gamecontaner = document.getElementById("game-container")
-    console.log(gamecontaner);
     const tileMap = new TileMap(gamecontaner)
     tileMap.draw()
   }, 10);
@@ -17,12 +16,16 @@ function Home() {
   return vdm("div", { id: "game-container" })
 }
 
-function auth() {
-  return vdm("div", {class: "contener_auth"}, EmotesCat(3))
+function NewUserPage() {
+  return vdm("div", { class: "contener_auth" },
+    vdm("div", { class: "contener_name" },
+      EmotesCat(3)
+    )
+  )
 }
 
 function message(text) {
-  return vdm('div', {class : "message_image"}, text)
+  return vdm('div', { class: "message_image" }, text)
 }
 
 // defferent emotes cat 0 -> 14
@@ -57,7 +60,7 @@ function backToHome(path) {
 }
 
 router.add("/", Home)
-  .add("/auth", auth)
+  .add("/auth", NewUserPage)
 
 router.setNotFound(() =>
   vdm("div", {},

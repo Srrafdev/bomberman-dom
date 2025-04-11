@@ -1,0 +1,16 @@
+.contener_auth {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.contener_name {
+  /* background-color: darkslateblue; */
+  background-image: url("../Assets/Sprout Lands - Sprites - Basic pack/UI/Sprite sheets/Setting menu.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+
+  height: 300px;
+  width: 500px;
+}
