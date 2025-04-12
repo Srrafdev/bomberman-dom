@@ -1,3 +1,38 @@
+/**
+ * @file vdom-framework.js
+ * @description
+ * A lightweight Virtual DOM framework for rendering and diffing DOM elements,
+ * managing global state, handling routing, and managing event listeners.
+ *
+ * Main Features:
+ * - createVDOM: Create a virtual DOM node.
+ * - render: Convert virtual DOM to real DOM.
+ * - diffing: Efficiently update the DOM using diffing.
+ * - StateManagement: Global state storage with listener support and localStorage persistence.
+ * - renderComponent: Handle rendering and re-rendering of VDOM-based components.
+ * - Routing: Client-side route management via history API.
+ * - EventSystem: Delegated event listener system with automatic cleanup.
+ *
+ * Exports:
+ * - createVDOM
+ * - route
+ * - handleLocation
+ * - setRoutes
+ * - setRoot
+ * - StateManagement
+ * - EventSystem
+ * - renderComponent
+ */
+
+// ------------------ Virtual DOM ------------------
+
+/**
+ * Creates a virtual DOM node.
+ * @param {string} tag - HTML tag name (e.g., "div").
+ * @param {Object} attrs - Attributes like id, class, onClick, etc.
+ * @param {Array} children - Nested virtual DOM nodes or strings.
+ * @returns {Object} A VDOM node.
+ */
 function vdm(tag, attrs, ...children) {
   if (typeof tag === "function") {
     return tag({ ...attrs, children });
@@ -5,27 +40,26 @@ function vdm(tag, attrs, ...children) {
   return { tag, attrs: attrs || {}, children: children.flat() };
 }
 
+/**
+* Converts a virtual DOM node to an actual DOM element.
+* @param {Object|string} vDOM - Virtual DOM or string.
+* @returns {Node} A DOM Node (HTMLElement or TextNode).
+*/
 function render(vDOM) {
-  if (!vDOM) { // for IE
-    console.warn("Skipping undefined VDOM node:", vDOM);
-    return document.createComment("Empty node");
-  }
-
-  if (typeof vDOM === "string") {
-    return document.createTextNode(vDOM);
-  }
-
-  if (!vDOM.tag) { // for IE
-    console.warn("VDOM node missing 'tag' property:", vDOM);
-    return document.createComment("Invalid VDOM node");
-  }
+  if (!vDOM) return document.createComment("Empty node");
+  if (typeof vDOM === "string") return document.createTextNode(vDOM);
+  if (!vDOM.tag) return document.createComment("Invalid VDOM node");
 
   const element = document.createElement(vDOM.tag);
 
   for (const key in vDOM.attrs) {
-    if (key.startsWith("on")) {
-      const event = key.toLowerCase().slice(2)
-      myEventSystem.addEvent(element, event, vDOM.attrs[key]);
+    if (key === "ref" && typeof vDOM.attrs[key] === "function") {
+      setTimeout(() => vDOM.attrs[key](element), 0);
+    } else if (key.startsWith("on")) {
+      const event = key.toLowerCase().slice(2);
+      EventSystem.add(element, event, vDOM.attrs[key]);
+    } else if (key === "checked") {
+      element.checked = vDOM.attrs[key];
     } else {
       element.setAttribute(key, vDOM.attrs[key]);
     }
@@ -40,22 +74,31 @@ function render(vDOM) {
 
 let rootElement = null;
 
+/**
+* Sets the root element where components will render.
+* @param {string} elementId - ID of the root DOM element.
+*/
 function setRoot(elementId) {
   rootElement = document.getElementById(elementId);
 }
 
-let currentComponent = null
+let currentComponent = null;
 
+/**
+* Diffs two virtual DOM trees and updates the real DOM.
+* @param {HTMLElement} root - Root DOM node.
+* @param {Object|string} oldVDOM - Previous virtual DOM.
+* @param {Object|string} newVDOM - New virtual DOM.
+* @param {number} index - Child index in the parent node.
+*/
 function diffing(root, oldVDOM, newVDOM, index = 0) {
   const currentChild = root.childNodes[index];
 
-  // Handle null/undefined cases
+  // over handling
   if (!newVDOM && !oldVDOM) return;
+
   if (!newVDOM) {
-    if (currentChild) {
-      cleanAllEvents(currentChild, oldVDOM);
-      root.removeChild(currentChild);
-    }
+    if (currentChild) root.removeChild(currentChild);
     return;
   }
   if (!oldVDOM) {
@@ -63,21 +106,10 @@ function diffing(root, oldVDOM, newVDOM, index = 0) {
     return;
   }
 
-  // Handle text nodes
   if (typeof newVDOM === "string" || typeof oldVDOM === "string") {
     if (typeof newVDOM === "string" && typeof oldVDOM === "string") {
-      if (newVDOM !== oldVDOM && currentChild) {
-        currentChild.textContent = newVDOM;
-      }
+      if (newVDOM !== oldVDOM && currentChild) currentChild.textContent = newVDOM;
     } else if (currentChild) {
-      root.replaceChild(render(newVDOM), currentChild);
-    }
-    return;
-  }
-
-  // Handle tag changes
-  if (newVDOM.tag !== oldVDOM.tag) {
-    if (currentChild) {
       root.replaceChild(render(newVDOM), currentChild);
     } else {
       root.appendChild(render(newVDOM));
@@ -85,34 +117,40 @@ function diffing(root, oldVDOM, newVDOM, index = 0) {
     return;
   }
 
-  // Update attributes (events already cleaned)
+  if (newVDOM.tag !== oldVDOM.tag) {
+    if (currentChild) root.replaceChild(render(newVDOM), currentChild);
+    else root.appendChild(render(newVDOM));
+    return;
+  }
+
   if (currentChild) {
-    // Set new attributes
     for (const attr in newVDOM.attrs) {
-      if (newVDOM.attrs[attr] !== oldVDOM.attrs[attr]) {
+      if (attr === "checked") {
+        if (currentChild.checked !== newVDOM.attrs[attr]) {
+          currentChild.checked = newVDOM.attrs[attr];
+        }
+      } else if (attr === "ref" && typeof newVDOM.attrs[attr] === "function") {
+        try {
+          newVDOM.attrs[key](element);
+        } catch (e) {
+          console.error("Ref callback error:", e);
+        }
+      } else if (newVDOM.attrs[attr] !== oldVDOM.attrs[attr]) {
         if (attr.startsWith("on")) {
-          const event = attr.toLowerCase().slice(2)
-          myEventSystem.addEvent(currentChild, event, newVDOM.attrs[attr]);
+          const event = attr.toLowerCase().slice(2);
+          EventSystem.remove(currentChild, event, oldVDOM.attrs[attr]);
+          EventSystem.add(currentChild, event, newVDOM.attrs[attr]);
         } else {
-          currentChild.setAttribute(attr, newVDOM.attrs[attr])
+          currentChild.setAttribute(attr, newVDOM.attrs[attr]);
         }
       }
     }
 
-    // Remove attributes that don't exist in newVDOM
     for (const attr in oldVDOM.attrs) {
-      if (!newVDOM.attrs[attr]) {
-        currentChild.removeAttribute(attr)
-      }
-
-      if (attr.startsWith("on")) {
-        const event = attr.toLowerCase().slice(2)
-        myEventSystem.removeEvent(currentChild, event, oldVDOM.attrs[attr]);
-      }
+      if (!newVDOM.attrs[attr] && attr !== "ref") currentChild.removeAttribute(attr);
     }
   }
 
-  // Diff children (recursion)
   const oldChildren = oldVDOM.children || [];
   const newChildren = newVDOM.children || [];
   const maxLen = Math.max(oldChildren.length, newChildren.length);
@@ -121,32 +159,33 @@ function diffing(root, oldVDOM, newVDOM, index = 0) {
     diffing(currentChild, oldChildren[i], newChildren[i], i);
   }
 
-  // Remove excess old children
-  if (oldChildren.length > newChildren.length) {
-    for (let i = newChildren.length; i < oldChildren.length; i++) {
-      if (currentChild?.childNodes[i]) {
+  // over handling
+  if (oldChildren.length > newChildren.length && currentChild) {
+    for (let i = oldChildren.length - 1; i >= newChildren.length; i--) {
+      if (i < currentChild.childNodes.length) {
         currentChild.removeChild(currentChild.childNodes[i]);
       }
     }
   }
 }
 
-// Helper function to clean all events
-function cleanAllEvents(node, vdom) {
-  if (!vdom.attrs) return;
-  for (const attr in vdom.attrs) {
-    if (attr.startsWith("on")) {
-      const event = attr.toLowerCase().slice(2);
-      myEventSystem.removeEvent(node, event, vdom.attrs[attr]);
-    }
-  }
-}
+let haveNewState = false;
 
+/**
+* Renders a component and handles diffing if already rendered.
+* @param {Function} component - A function returning a virtual DOM.
+*/
 function renderComponent(component) {
+  if (haveNewState) {
+    EventSystem.cleanAll();
+    haveNewState = false;
+  }
+
   if (!rootElement) {
-    console.error("Root element is not set. Call setRoot(elementId) before rendering components.");
+    console.error("Root element is not set. Call setRoot(elementId).");
     return;
   }
+
   const newVDOM = component();
 
   if (currentComponent === null) {
@@ -160,95 +199,172 @@ function renderComponent(component) {
 }
 
 let globalRoutes = {};
-
-function route(event) {
-  if (event.preventDefault) event.preventDefault();
-  window.history.pushState({}, "", event.target.href);
-  handleLocation();
-}
-// redirect : route({target: {href: "/result" } })
-
-function handleLocation() {
-  const path = window.location.pathname;
-  if (!globalRoutes[path] && !globalRoutes[404]) {
-    console.error("No route found, and no 404 handler is set.");
-    return;
-  }
-  const component = globalRoutes[path] || globalRoutes[404];
-  renderComponent(component);
-}
-
+/**
+* Sets available routes.
+* @param {Object} routes - Object of path -> component mappings.
+*/
 function setRoutes(routes) {
   globalRoutes = routes;
 }
 
-const StateManagement = (function () {
-  let state = JSON.parse(localStorage.getItem("myState")) || {};
-  let listeners = [];
+// ------------------ Global State Management ------------------
 
-  function notify() {
-    localStorage.setItem("myState", JSON.stringify(state));
-    listeners.forEach(listener => listener(state));
-  }
+const StateManagement = {
+  state: JSON.parse(localStorage.getItem("myState")) || {},
+  listeners: [],
 
-  return {
-    getState: () => state,
+  notify() {
+    localStorage.setItem("myState", JSON.stringify(this.state));
+    this.listeners.forEach(listener => listener(this.state));
+  },
 
-    setState: (newState) => {
-      state = { ...state, ...newState };
-      notify();
-    },
+  get() {
+    return this.state;
+  },
 
-    deleteState: (key) => {
-      if (state.hasOwnProperty(key)) {
-        delete state[key];
-        notify();
-      }
-    },
+  set(newState) {
+    if (newState !== this.state) haveNewState = true;
+    this.state = { ...this.state, ...newState };
+    this.notify();
+  },
 
-    subscribe: (listener) => {
-      listeners.push(listener);
+  delete(key) {
+    if (this.state.hasOwnProperty(key)) {
+      delete this.state[key];
+      this.notify();
     }
-  };
-})();
+  },
 
-const myEventSystem = {
+  reset() {
+    localStorage.removeItem("myState");
+    this.state = {};
+    this.notify();
+  },
+
+  /**
+   * Subscribes a listener to state changes.
+   * @param {Function} listener - Function to call on state change.
+   * @returns {Function} Unsubscribe function.
+   */
+  subscribe(listener) {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
+  }
+};
+// const StateManagement = {
+//   state: {}, // Initial empty state
+//   component: null, // Store the component to re-render
+
+//   get() {
+//     return this.state;
+//   },
+
+//   set(newState) {
+//     if (newState !== this.state) {
+//       haveNewState = true;
+//     }
+//     this.state = { ...this.state, ...newState };
+
+//     // Re-render component if we have a state change
+//     if (haveNewState && this.component) {
+//       renderComponent(this.component);
+//     }
+//   },
+
+//   delete(key) {
+//     if (this.state.hasOwnProperty(key)) {
+//       delete this.state[key];
+//       haveNewState = true;
+
+//       // Re-render component if we have a state change
+//       if (this.component) {
+//         renderComponent(this.component);
+//       }
+//     }
+//   },
+
+//   reset() {
+//     this.state = {};
+//     haveNewState = true;
+
+//     // Re-render component if we have a state change
+//     if (this.component) {
+//       renderComponent(this.component);
+//     }
+//   },
+
+//   // Method to set the component that should be re-rendered on state changes
+//   setComponent(component) {
+//     this.component = component;
+//   }
+// };
+
+
+// ------------------ Event System ------------------
+const EventSystem = {
   events: {},
+  eventListeners: {},
 
-  addEvent(element, eventType, handler) {
+  add(element, eventType, handler, protect = false) {
+    if (element === window || element === document) {
+      if (!this.events[eventType]) {
+        this.events[eventType] = [];
+        element.addEventListener(eventType, handler);
+      }
+      this.events[eventType].push({ element, handler, protect });
+      return;
+    }
+
     if (!this.events[eventType]) {
       this.events[eventType] = [];
-      document.body.addEventListener(eventType, (e) => this.handleEvent(eventType, e));
+      this.eventListeners[eventType] = (e) => this.handle(eventType, e);
+      document.body.addEventListener(eventType, this.eventListeners[eventType], true);
     }
-    this.events[eventType].push({ element, handler });
+
+    this.events[eventType].push({ element, handler, protect });
   },
 
-  removeEvent(element, eventType, handler) {
+  remove(element, eventType, handler) {
     if (this.events[eventType]) {
       this.events[eventType] = this.events[eventType].filter(
-        (evtObj) => evtObj.element !== element || evtObj.handler !== handler
+        evtObj => !(evtObj.element === element && evtObj.handler === handler)
       );
       if (this.events[eventType].length === 0) {
-        document.body.removeEventListener(eventType, (e) => this.handleEvent(eventType, e));
+        document.body.removeEventListener(eventType, this.eventListeners[eventType]);
         delete this.events[eventType];
+        delete this.eventListeners[eventType];
       }
     }
   },
 
-  handleEvent(eventType, event) {
+  cleanAll() {
+    for (const eventType in this.events) {
+      const protectedEvents = this.events[eventType].filter(event => event.protect);
+      if (protectedEvents.length === 0) {
+        document.body.removeEventListener(eventType, this.eventListeners[eventType]);
+        delete this.events[eventType];
+        delete this.eventListeners[eventType];
+      } else {
+        this.events[eventType] = protectedEvents;
+      }
+    }
+  },
+
+  handle(eventType, event) {
     if (!this.events[eventType]) return;
     this.events[eventType].forEach(({ element, handler }) => {
-      if (element.contains(event.target)) {
+      if (element === event.target || element.contains(event.target)) {
         handler(event);
       }
     });
   }
 };
 
-export { vdm, route, handleLocation, setRoutes, setRoot, StateManagement, myEventSystem, renderComponent };
 
-//==================== rachid router
-export class Router {
+// //==================== rachid router
+class Router {
   constructor(renderFunction) {
     this.routes = {};
     this.render = renderFunction;
@@ -293,3 +409,13 @@ export class Router {
     );
   }
 }
+
+export {
+  vdm,
+  setRoutes,
+  setRoot,
+  StateManagement,
+  EventSystem,
+  Router,
+  renderComponent
+};

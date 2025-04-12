@@ -1,4 +1,4 @@
-import { Router, setRoot } from "./miniframework.js";
+import { Router, setRoot, StateManagement } from "./miniframework.js";
 import { renderComponent } from "./miniframework.js";
 import { vdm } from "./miniframework.js";
 import TileMap from "./tile_map.js";
@@ -7,13 +7,17 @@ setRoot("app")
 const router = new Router(renderComponent)
 
 function Home() {
+  let gamecontaner = null
+
   setTimeout(() => {
-    const gamecontaner = document.getElementById("game-container")
+    console.log(gamecontaner);
+
+    // const gamecontaner = document.getElementById("game-container")
     const tileMap = new TileMap(gamecontaner)
     tileMap.draw()
   }, 10);
 
-  return vdm("div", { id: "game-container" })
+  return vdm("div", { id: "game-container", ref: (gr) => gamecontaner = gr })
 }
 
 function NewUserPage() {
