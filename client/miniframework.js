@@ -131,7 +131,7 @@ function diffing(root, oldVDOM, newVDOM, index = 0) {
         }
       } else if (attr === "ref" && typeof newVDOM.attrs[attr] === "function") {
         try {
-          newVDOM.attrs[key](element);
+          newVDOM.attrs[attr](currentChild);
         } catch (e) {
           console.error("Ref callback error:", e);
         }
