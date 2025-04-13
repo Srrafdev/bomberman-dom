@@ -1,8 +1,10 @@
+//  second aremont mean [2, 2, 2, 2, 3, 3, 3, 3, 3, 3] = 40% tree and 60% grass
 export default class TileMap {
-  constructor(container, rows = 11, columns = 15) {
+  constructor(container, por, rows = 11, columns = 15) {
     this.container = container;
     this.rows = rows;
     this.columns = columns;
+    this.por = por
 
     this.map = [
       [1.1, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.3],
@@ -38,7 +40,6 @@ export default class TileMap {
           this.map[row][col] = 3
 
         } else if (this.map[row][col] === 0) {
-          let por = [2, 2, 2, 3, 3, 3, 3, 3, 3, 3]
           let random = Math.round(Math.random() * (9 - 0) + 0);
           this.map[row][col] = por[random]
         }
@@ -59,6 +60,9 @@ export default class TileMap {
     this.container.style.gridTemplateColumns = `repeat(${this.columns}, ${tileSize}px)`;
 
     this.container.innerHTML = ""; // Clear previous tiles
+    // console.log(containerHeight, containerWidth);
+    // console.log(tileSize);
+    // console.log(this.container);
 
     for (let row = 0; row < this.map.length; row++) {
       for (let col = 0; col < this.map[row].length; col++) {
@@ -83,41 +87,6 @@ export default class TileMap {
         if (className) {
           tileDiv.classList.add(className);
         }
-        // switch (tileValue) {
-        //   case 1:
-        //     tileDiv.classList.add("toba");
-        //     break;
-        //   case 1.1:
-        //     tileDiv.classList.add("topLeft");
-        //     break;
-        //   case 1.2:
-        //     tileDiv.classList.add("top");
-        //     break;
-        //   case 1.3:
-        //     tileDiv.classList.add("topRight");
-        //     break;
-        //   case 1.4:
-        //     tileDiv.classList.add("left");
-        //     break;
-        //   case 1.5:
-        //     tileDiv.classList.add("right");
-        //     break;
-        //   case 1.6:
-        //     tileDiv.classList.add("downLeft");
-        //     break;
-        //   case 1.7:
-        //     tileDiv.classList.add("down");
-        //     break;
-        //   case 1.8:
-        //     tileDiv.classList.add("downRight");
-        //     break;
-        //   case 2:
-        //     tileDiv.classList.add("box");
-        //     break;
-        //   case 3:
-        //     tileDiv.classList.add("grass");
-        //     break;
-        // }
 
         this.container.appendChild(tileDiv);
       }

@@ -370,9 +370,9 @@ class Router {
     this.render = renderFunction;
     this.notFoundComponent = null;
     this.currentPath = window.location.pathname;
-
-    window.addEventListener('popstate', () => this.handleNavigation());
-    window.addEventListener('DOMContentLoaded', () => this.handleNavigation());
+    
+    EventSystem.add(window, 'popstate', () => this.handleNavigation(), true)
+    EventSystem.add(window, 'DOMContentLoaded', () => this.handleNavigation(), true)
   }
 
   add(path, component) {

@@ -8,8 +8,11 @@ const router = new Router(renderComponent)
 
 function Home() {
   const contanerRef = (elemnt) => {
-    const tileMap = new TileMap(elemnt)
+    console.log(elemnt);
+
+    const tileMap = new TileMap(elemnt, [2, 2, 2, 2, 3, 3, 3, 3, 3, 3])
     tileMap.draw()
+    // setTimeout(() => tileMap.draw(), 10)
   }
 
   return vdm("div", { id: "game-container", ref: contanerRef })
