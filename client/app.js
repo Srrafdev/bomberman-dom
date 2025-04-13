@@ -20,7 +20,7 @@ function NewUserPage() {
     vdm("div", { class: "contener_auth" },
       vdm("div", { class: "pixel2" },
         vdm("input", { type: "text", class: "input_name", placeholder: "your name", maxlength: "20" }),
-        vdm("button", { class: "btn_add_name" }, "playe"),
+        vdm("button", { class: "btn_add_name" }, "play"),
         EmotesCat(2, "insert your name")
       )
     ))
