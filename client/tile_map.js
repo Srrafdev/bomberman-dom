@@ -87,6 +87,7 @@ export default class TileMap {
         };
         const className = tileClasses[tileValue];
         if (className) {
+          tileDiv.id = className
           tileDiv.classList.add(className);
         }
 

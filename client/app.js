@@ -18,7 +18,8 @@ function Home() {
 function NewUserPage() {
   return vdm("div", { class: "contener_auth" },
     vdm("div", { class: "contener_name" },
-      EmotesCat(3)
+      vdm("input", { class: "input_name" })
+      // EmotesCat(3)
     )
   )
 }

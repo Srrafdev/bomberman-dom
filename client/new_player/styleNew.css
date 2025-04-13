@@ -9,8 +9,28 @@
   /* background-color: darkslateblue; */
   background-image: url("../Assets/Sprout Lands - Sprites - Basic pack/UI/Sprite sheets/Setting menu.png");
   background-repeat: no-repeat;
+  background-position: -415px, 0;
   background-size: cover;
-
-  height: 300px;
+  object-fit: fill;
+  /* stretch */
+  image-rendering: pixelated;
+  height: 500px;
   width: 500px;
+}
+
+.input_name {
+  background: transparent;
+  border: none;
+  background-image: url("../Assets/Sprout Lands - Sprites - Basic pack/UI/Sprite sheets/UI Big Play Button.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  image-rendering: pixelated;
+  background-position: 150px 0;
+  height: 50px;
+  width: 300px;
+  color: aliceblue;
+}
+
+.input_name:focus{
+  border: none;
 }
