@@ -16,12 +16,14 @@ function Home() {
 }
 
 function NewUserPage() {
-  return vdm("div", { class: "contener_auth" },
-    vdm("div", { class: "contener_name" },
-      vdm("input", { class: "input_name" })
-      // EmotesCat(3)
-    )
-  )
+  return (
+    vdm("div", { class: "contener_auth" },
+      vdm("div", { class: "pixel2" },
+        vdm("input", { type: "text", class: "input_name", placeholder: "your name", maxlength: "20" }),
+        vdm("button", { class: "btn_add_name" }, "playe"),
+        EmotesCat(2, "insert your name")
+      )
+    ))
 }
 
 function message(text) {
@@ -29,7 +31,7 @@ function message(text) {
 }
 
 // defferent emotes cat 0 -> 14
-function EmotesCat(emoteNumber) {
+function EmotesCat(emoteNumber, message, random = true) {
   const root = document.documentElement
   const steps = {
     0: 1,
@@ -48,11 +50,24 @@ function EmotesCat(emoteNumber) {
     13: 2,
     14: 1
   }
-  if (steps[emoteNumber]) {
-    root.style.setProperty('--EmotesNumber', emoteNumber)
-    root.style.setProperty('--EmotesSteps', steps[emoteNumber])
+  function setanime() {
+    if (steps[emoteNumber]) {
+      root.style.setProperty('--EmotesNumber', emoteNumber)
+      root.style.setProperty('--EmotesSteps', steps[emoteNumber])
+    }
+    emoteNumber = Math.round(Math.random() * (13 - 1) + 1);
   }
-  return vdm("div", { class: "emotes_cat" })
+  setanime()
+  if (random) setInterval(() => setanime(), 3000);
+
+  return (
+    vdm("div", { class: "contaner_emotes" },
+      vdm("div", { class: "emotes_cat" }),
+      vdm("div", { class: "message_emotes" },
+        vdm("p", {}, message)
+      )
+    )
+  )
 }
 
 function backToHome(path) {
