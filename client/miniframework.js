@@ -175,7 +175,7 @@ let haveNewState = false;
 * Renders a component and handles diffing if already rendered.
 * @param {Function} component - A function returning a virtual DOM.
 */
-function renderComponent(component) {
+function renderComponent(component, isNwPath = false) {
   if (haveNewState) {
     EventSystem.cleanAll();
     haveNewState = false;
@@ -188,7 +188,7 @@ function renderComponent(component) {
 
   const newVDOM = component();
 
-  if (currentComponent === null) {
+  if (currentComponent === null || isNwPath) {
     currentComponent = newVDOM;
     rootElement.innerHTML = "";
     rootElement.appendChild(render(newVDOM));
@@ -370,7 +370,7 @@ class Router {
     this.render = renderFunction;
     this.notFoundComponent = null;
     this.currentPath = window.location.pathname;
-    
+
     EventSystem.add(window, 'popstate', () => this.handleNavigation(), true)
     EventSystem.add(window, 'DOMContentLoaded', () => this.handleNavigation(), true)
   }
@@ -399,7 +399,7 @@ class Router {
 
     const component = this.routes[path] || this.notFoundComponent || this.defaultNotFound();
 
-    this.render(component);
+    this.render(component, true);
   }
 
   defaultNotFound() {
