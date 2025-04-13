@@ -69,6 +69,8 @@ export default class TileMap {
         const tileValue = this.map[row][col];
         const tileDiv = document.createElement("div");
         tileDiv.classList.add("tile");
+        tileDiv.dataset.row = row;
+        tileDiv.dataset.col = col;
         const tileClasses = {
           1: "toba",
           1.1: "topLeft",

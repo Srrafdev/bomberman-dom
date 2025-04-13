@@ -1,4 +1,4 @@
-import { Router, setRoot, StateManagement } from "./miniframework.js";
+import { EventSystem, Router, setRoot, StateManagement } from "./miniframework.js";
 import { renderComponent } from "./miniframework.js";
 import { vdm } from "./miniframework.js";
 import TileMap from "./tile_map.js";
@@ -15,7 +15,7 @@ function Home() {
     // setTimeout(() => tileMap.draw(), 10)
   }
 
-  return vdm("div", { id: "game-container", ref: contanerRef })
+  return vdm("div", {}, vdm("div", { id: "game-container", ref: contanerRef }), CurrPlayer())
 }
 
 function NewUserPage() {
@@ -59,6 +59,72 @@ function EmotesCat(emoteNumber) {
 
 function backToHome(path) {
   return vdm("button", { onClick: () => router.link(path) }, `go to ${path}`)
+}
+
+function CurrPlayer() {
+  let currPlayer;
+  let xPos = 0;
+  let yPos = 0;
+  let keysPressed = {};
+  let animationFrameId;
+  let speedX = 5;
+  let speedY = 5;
+  let width = 0;
+  let height = 0;
+
+  function initGame() {
+    currPlayer = document.getElementById("current-player");
+    const tileElement = document.querySelector('[data-row="1"][data-col="1"]');
+    if (!tileElement) {
+      console.error("Could not find initial tile for positioning", tileElement);
+      return;
+    }
+    const tileRect = tileElement.getBoundingClientRect();
+    width = tileRect.width;
+    height = tileRect.height;
+    speedX = Math.floor(width / 10);
+    speedY = Math.floor(height / 10);
+    console.log(`Tile size: ${width}x${height}, Speed: ${speedX},${speedY}`);
+    if (currPlayer) {
+      currPlayer.style.width = `${width}px`;
+      currPlayer.style.height = `${height}px`;
+      currPlayer.style.top = `${tileRect.top}px`; // top make drop frame work by translate
+      currPlayer.style.left = `${tileRect.left}px`; // left make drop frame work by translate
+      console.log(`Player position: ${tileRect.top}px, ${tileRect.left}px`);
+    }
+    EventSystem.add(document, "keydown", (e) => { keysPressed[e.key] = true; });
+    EventSystem.add(document, "keyup", (e) => { keysPressed[e.key] = false; });
+    startGameLoop();
+  }
+
+  function startGameLoop() {
+    function gameLoop() {
+      if (keysPressed["ArrowUp"]) yPos -= speedY;
+      if (keysPressed["ArrowDown"]) yPos += speedY;
+      if (keysPressed["ArrowLeft"]) xPos -= speedX;
+      if (keysPressed["ArrowRight"]) xPos += speedX;
+
+      const tile = document.elementFromPoint(xPos, yPos);
+      if (tile && tile.classList.contains("tile")) {
+        console.log("Collision with tile detected");
+      }
+
+      if (currPlayer) {
+        currPlayer.style.transform = `translate(${xPos}px, ${yPos}px)`;
+      }
+
+      animationFrameId = requestAnimationFrame(gameLoop);
+    }
+
+    animationFrameId = requestAnimationFrame(gameLoop);
+  }
+
+  setTimeout(initGame, 10);
+
+  return vdm("div", {
+    id: "current-player",
+    class: "current-player"
+  });
 }
 
 router.add("/", Home)

@@ -24,3 +24,8 @@
     /* 8 frames * 32px = 256px */
   }
 }
+
+.current-player {
+  z-index: 10;
+  background-color: brown;
+}
