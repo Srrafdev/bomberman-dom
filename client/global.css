@@ -67,3 +67,58 @@
   z-index: 10;
   background-color: brown;
 }
+
+.dialog-box {
+  width: 300px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.dialog-header {
+  background-color: #4285f4;
+  color: white;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.dialog-content {
+  padding: 20px;
+  font-size: 24px;
+  text-align: center;
+  min-height: 60px;
+}
+
+.math-expression {
+  font-family: "Times New Roman", serif;
+  font-style: italic;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  background-color: #f9f9f9;
+  border-top: 1px solid #eee;
+}
+
+.button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.cancel-button {
+  background-color: #f1f1f1;
+  color: #333;
+  margin-right: 8px;
+}
+
+.ok-button {
+  background-color: #4285f4;
+  color: white;
+}

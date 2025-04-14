@@ -26,10 +26,6 @@ function NewUserPage() {
     ))
 }
 
-function message(text) {
-  return vdm('div', { class: "message_image" }, text)
-}
-
 // defferent emotes cat 0 -> 14
 function EmotesCat(emoteNumber, message, random = true) {
   const root = document.documentElement
@@ -65,6 +61,20 @@ function EmotesCat(emoteNumber, message, random = true) {
       vdm("div", { class: "emotes_cat" }),
       vdm("div", { class: "message_emotes" },
         vdm("p", {}, message)
+      )
+    )
+  )
+}
+
+function WaitingRoom() {
+  return (
+    vdm("div", { class: "dialog-box" },
+      vdm("div", { class: "dialog-header" }, "Math Expression"),
+      vdm("div", { class: "dialog-content" },
+        vdm("span", { class: "math-expression" }, "10 ÷ 2")
+      ),
+      vdm("div", { class: "dialog-footer" },
+        vdm("button", { class: "button ok-button" }, "send")
       )
     )
   )
@@ -140,8 +150,11 @@ function CurrPlayer() {
   });
 }
 
-router.add("/", Home)
-  .add("/auth", NewUserPage)
+router
+  .add("/", NewUserPage)
+  .add("/room", WaitingRoom)
+  .add("/game", Home)
+
 
 router.setNotFound(() =>
   vdm("div", {},
