@@ -28,7 +28,8 @@
 .current-player {
   position: absolute;
   z-index: 10;
-  background-image: url('Assets/Sprout Lands - Sprites - Basic pack/Characters/Basic Charakter Spritesheet.png');
+  background-image: url('Assets/character/walk-front.png');
+  /* background-image: url('Assets/Sprout Lands - Sprites - Basic pack/Characters/Basic Charakter Spritesheet.png'); */
   background-repeat: no-repeat;
   background-size: var(--sprite-sheet-width) auto;
   image-rendering: pixelated;
@@ -45,47 +46,44 @@
 }
 
 .current-player.right {
-  background-position: 0 calc(-3 * var(--sprite-height));
+  background-image: url('Assets/character/walk-right.png');
   animation: animaplayer 0.5s steps(4) infinite;
 }
 
 .current-player.left {
-  background-position: 0 calc(-2 * var(--sprite-height));
+  background-image: url('Assets/character/walk-left.png');
   animation: animaplayer 0.5s steps(4) infinite;
 }
 
 .current-player.top {
-  background-position: 0 calc(-1 * var(--sprite-height));
+  background-image: url('Assets/character/walk-back.png');
   animation: animaplayer 0.5s steps(4) infinite;
 }
 
 .current-player.down {
-  background-position: 0 0;
+  background-image: url('Assets/character/walk-front.png');
   animation: animaplayer 0.5s steps(4) infinite;
 }
 
 .current-player.idle-right {
-  background-position: 0 calc(-3 * var(--sprite-height));
-  animation: animaplayer 2s steps(2) infinite;
+  background-image: url('Assets/character/walk-right.png');
 }
 
 .current-player.idle-left {
-  background-position: 0 calc(-2 * var(--sprite-height));
-  animation: animaplayer 2s steps(2) infinite;
+  background-image: url('Assets/character/walk-left.png');
+
 }
 
 .current-player.idle-top {
-  background-position: 0 calc(-1 * var(--sprite-height));
-  animation: animaplayer 2s steps(2) infinite;
-}
+  background-image: url('Assets/character/walk-back.png');
+} 
 
 .current-player.idle-down {
-  background-position: 0 0;
-  animation: animaplayer 2s steps(2) infinite;
+  background-image: url('Assets/character/walk-front.png');
 }
 
-/* Default idle state */
+ /* Default idle state */
 .current-player.idle {
-  background-position: 0 0;
+  background-image: url('Assets/character/walk-front.png');
   animation: none;
 }
