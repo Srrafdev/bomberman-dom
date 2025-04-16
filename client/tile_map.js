@@ -95,4 +95,30 @@ export default class TileMap {
       }
     }
   }
+
+  // added by ayoub
+  setTile(row, col, value) {
+    if (row >= 0 && row < this.rows && col >= 0 && col < this.columns) {
+      this.map[row][col] = value; // hadi 3la web soket
+
+      const existingTile = this.container.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+      if (existingTile) {
+        
+        // can add more
+        const tileClasses = {
+          4: "box"
+        };
+        
+        const className = tileClasses[value];
+        if (className && existingTile.id === "grass") {
+          existingTile.className = "tile";
+          existingTile.id = className;
+          existingTile.classList.add(className);
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+
 }

@@ -34,10 +34,12 @@ function updateDebugInfo(info) {
     .join('');
 }
 
+let tileMap  // by ayoub
+
 function Home() {
   const contanerRef = (elemnt) => {
     const mapData = [2, 3, 3, 3, 3, 3, 3, 3, 3, 3];
-    const tileMap = new TileMap(elemnt, mapData);
+    tileMap = new TileMap(elemnt, mapData);
     tileMap.draw();
   }
 
@@ -178,6 +180,8 @@ function CurrPlayer() {
   let isMoving = false;
   let lastDirection = "down";
 
+  let gridX, gridY //--------------------------------- added by ayoub
+
   function initGame() {
     currPlayer = document.getElementById("current-player");
     const tileElement = document.querySelector('[data-row="1"][data-col="1"]');
@@ -196,15 +200,15 @@ function CurrPlayer() {
     if (currPlayer) {
       currPlayer.style.width = `${playerWidth}px`;
       currPlayer.style.height = `${playerHeight}px`;
-      currPlayer.style.top = `${tileRect.top + 2.5}px`;
-      currPlayer.style.left = `${tileRect.left + 2.5}px`;
+      currPlayer.style.top = `${tileRect.top}px`;
+      currPlayer.style.left = `${tileRect.left}px`;
 
 
-      const spriteScaleFactor = playerHeight / 32;
+      const spriteScaleFactor = playerHeight / 48;
 
-      currPlayer.style.setProperty('--sprite-width', `${32 * spriteScaleFactor}px`);
-      currPlayer.style.setProperty('--sprite-height', `${32 * spriteScaleFactor}px`);
-      currPlayer.style.setProperty('--sprite-sheet-width', `${128 * spriteScaleFactor}px`);
+      currPlayer.style.setProperty('--sprite-width', `${48 * spriteScaleFactor}px`);
+      currPlayer.style.setProperty('--sprite-height', `${48 * spriteScaleFactor}px`);
+      currPlayer.style.setProperty('--sprite-sheet-width', `${192 * spriteScaleFactor}px`);
 
       updatePlayerState("idle");
     }
@@ -248,18 +252,26 @@ function CurrPlayer() {
     ];
     debugInfo["corners"] = corners.map(corner => `(${corner.x}, ${corner.y})`).join(", ");
     const gridPositions = corners.map(corner => ({
-      gridY: Math.floor(corner.x / tileWidth),
-      gridX: Math.floor(corner.y / tileHeight)
+      gridX: Math.floor(corner.x / tileWidth),
+      gridY: Math.floor(corner.y / tileHeight)
     }));
-    console.log(gridPositions);
-    
-    debugInfo["uniqueTiles"] = gridPositions.map(tile => `(${tile.gridX + 1}, ${tile.gridY + 1})`).join(", ");
-    return gridPositions;
+    const uniqueTiles = [];
+    gridPositions.forEach(pos => {
+      const exists = uniqueTiles.some(tile =>
+        tile.gridX === pos.gridX && tile.gridY === pos.gridY
+      );
+
+      if (!exists) {
+        uniqueTiles.push(pos);
+      }
+    });
+    debugInfo["uniqueTiles"] = uniqueTiles.map(tile => `(${tile.gridY + 1}, ${tile.gridX + 1})`).join(", ");
+    return uniqueTiles;
   }
 
-  function getTileInfo(gridY, gridX) {
+  function getTileInfo(gridX, gridY) {
     const tileElement = document.querySelector(
-      `[data-row="${gridX + 1}"][data-col="${gridY + 1}"]`
+      `[data-row="${gridY + 1}"][data-col="${gridX + 1}"]`
     );
     return {
       walkable: tileElement ? (tileElement.id === "grass") : false
@@ -268,11 +280,11 @@ function CurrPlayer() {
 
   function canMove(newX, newY) {
     const tiles = getPlayerTiles(newX, newY);
-    debugInfo["tiles"] = tiles.map(tile => `(${tile.gridX + 1}, ${tile.gridY + 1})`).join(", ");
     const canMove = tiles.every(tile => {
-      const tileInfo = getTileInfo(tile.gridY, tile.gridX);
+      const tileInfo = getTileInfo(tile.gridX, tile.gridY);
       return tileInfo.walkable;
     });
+    debugInfo["tiles"] = tiles.map(tile => `(${tile.gridY + 1}, ${tile.gridX + 1})`).join(", ");
     debugInfo["Can Move"] = canMove ? "Yes" : "No";
     return canMove;
   }
@@ -288,13 +300,13 @@ function CurrPlayer() {
     debugInfo["Is Moving"] = isMoving ? "Yes" : "No";
 
     debugInfo["Current Tiles"] = tiles.map(tile =>
-      `(${tile.gridX + 1}, ${tile.gridY + 1})`
+      `(${tile.gridY + 1}, ${tile.gridX + 1})`
     ).join(", ");
 
     tiles.forEach((tile, index) => {
-      const tileInfo = getTileInfo(tile.gridY, tile.gridX);
+      const tileInfo = getTileInfo(tile.gridX, tile.gridY);
       debugInfo[`Tile ${index + 1}`] =
-        `(${tile.gridY}, ${tile.gridX}) - Type: ${tileInfo.id || 'unknown'} - ${tileInfo.walkable ? 'walkable' : 'blocked'}`;
+        `(${tile.gridX}, ${tile.gridY}) - Type: ${tileInfo.id || 'unknown'} - ${tileInfo.walkable ? 'walkable' : 'blocked'}`;
     });
 
     updateDebugInfo(debugInfo);
@@ -306,26 +318,109 @@ function CurrPlayer() {
       let newYPos = yPos;
       let moved = false;
       let direction = lastDirection;
+      let tas7i7BombX = 1
+      let tas7i7BombY = 1
 
+      // ------------------------------------------------------------------------------ ayoub logic
       if (keysPressed["ArrowUp"]) {
         newYPos -= speedY;
         direction = "top";
         moved = true;
+
+        const modX = newXPos % tileWidth;
+        const percentX = (modX * 100) / tileWidth;
+        if (percentX > 60) newXPos += (tileWidth - modX);
+        else if (percentX < 40) newXPos -= modX;
+        else newYPos += speedY;
+
+        gridY = Math.floor((newYPos) / tileHeight);
+        gridX = Math.floor((newXPos + tileWidth / 2) / tileWidth);
+
+        tas7i7BombX = 1
+        tas7i7BombY = 2
       } else if (keysPressed["ArrowDown"]) {
         newYPos += speedY;
         direction = "down";
         moved = true;
-      }
 
-      if (keysPressed["ArrowLeft"]) {
+        const modX = newXPos % tileWidth;
+        const percentX = (modX * 100) / tileWidth;
+        if (percentX > 60) newXPos += (tileWidth - modX);
+        else if (percentX < 40) newXPos -= modX;
+        else newYPos -= speedY;
+
+        gridY = Math.ceil((newYPos) / tileHeight);
+        gridX = Math.floor((newXPos + tileWidth / 2) / tileWidth);
+
+        tas7i7BombX = 1
+        tas7i7BombY = 0
+      } else if (keysPressed["ArrowLeft"]) {
         newXPos -= speedX;
         direction = "left";
         moved = true;
+
+        const modY = newYPos % tileHeight;
+        const percentY = (modY * 100) / tileHeight;
+        if (percentY > 60) newYPos += (tileHeight - modY);
+        else if (percentY < 40) newYPos -= modY;
+        else newXPos += speedX;
+
+        gridX = Math.floor((newXPos) / tileWidth);
+        gridY = Math.floor((newYPos + tileHeight / 2) / tileHeight);
+
+        tas7i7BombX = 2
+        tas7i7BombY = 1
+
       } else if (keysPressed["ArrowRight"]) {
         newXPos += speedX;
         direction = "right";
         moved = true;
+
+        const modY = newYPos % tileHeight;
+        const percentY = (modY * 100) / tileHeight;
+        if (percentY > 60) newYPos += (tileHeight - modY);
+        else if (percentY < 40) newYPos -= modY;
+        else newXPos -= speedX;
+
+        gridX = Math.ceil((newXPos) / tileWidth);
+        gridY = Math.floor((newYPos + tileHeight / 2) / tileHeight);
+
+        tas7i7BombX = 0
+        tas7i7BombY = 1
+      } else {
+        gridX = Math.floor((newXPos + tileWidth / 2) / tileWidth);
+        gridY = Math.floor((newYPos + tileHeight / 2) / tileHeight);
+        tas7i7BombX = 1
+        tas7i7BombY = 1
       }
+
+      // ------------------------------------------------------------------------------ last
+      //   if (keysPressed["ArrowUp"]) {
+      //     newYPos -= speedY;
+      //     direction = "top";
+      //     moved = true;
+      //   } else if (keysPressed["ArrowDown"]) {
+      //     newYPos += speedY;
+      //     direction = "down";
+      //     moved = true;
+      //   }
+
+      //   if (keysPressed["ArrowLeft"]) {
+      //     newXPos -= speedX;
+      //     direction = "left";
+      //     moved = true;
+      //   } else if (keysPressed["ArrowRight"]) {
+      //     newXPos += speedX;
+      //     direction = "right";
+      //     moved = true;
+      //   }
+
+      // ----------------------- bomb ayoub
+      if (keysPressed[" "]) {
+        let aaa = tileMap.setTile(gridY + tas7i7BombY, gridX + tas7i7BombX, 4)
+        keysPressed[" "] = false
+      }
+      // ------------------------------------
 
       if (moved) {
         if (currentDirection !== direction) {
@@ -337,14 +432,26 @@ function CurrPlayer() {
 
       isMoving = moved;
 
-      if (newXPos !== xPos && canMove(newXPos, yPos)) xPos = newXPos;
-      if (newYPos !== yPos && canMove(xPos, newYPos)) yPos = newYPos;
+      // ------------------------------------------------------------------------------ last
+      // if (newXPos !== xPos && canMove(newXPos, yPos)) xPos = newXPos;
+      // if (newYPos !== yPos && canMove(xPos, newYPos)) yPos = newYPos;
+
+      // ------------------------------------------------------------------------------ $ added by ayoub
+      const destinationTile = document.querySelector(`[data-row="${gridY + 1}"][data-col="${gridX + 1}"]`);
+
+      if (destinationTile && destinationTile.id === "grass") {
+        xPos = newXPos;
+        yPos = newYPos;
+      }
+      // ------------------------------------------------------------------------------- end |
 
       currPlayer.style.transform = `translate(${xPos}px, ${yPos}px)`;
 
-      updateDebugWithTiles();
+      // updateDebugWithTiles();
       animationFrameId = requestAnimationFrame(gameLoop);
     }
+
+
     animationFrameId = requestAnimationFrame(gameLoop);
   }
 
