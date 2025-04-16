@@ -3,11 +3,6 @@
   --EmotesSteps: 1;
 }
 
-.contaner_emotes {
-  display: flex;
-  gap: 10px;
-}
-
 .emotes_cat {
   background-image: url('Assets/Sprout Lands - Sprites - Basic pack/UI/Sprite sheets/Dialouge UI/Emotes/Teemo Basic emote animations sprite sheet.png');
   width: 32px;
@@ -30,95 +25,67 @@
   }
 }
 
-.message_emotes {
-  background-image: url("Assets/Sprout Lands - Sprites - Basic pack/UI/Sprite sheets/Dialouge UI/dialog box big.png");
+.current-player {
+  position: absolute;
+  z-index: 10;
+  background-image: url('Assets/Sprout Lands - Sprites - Basic pack/Characters/Basic Charakter Spritesheet.png');
   background-repeat: no-repeat;
-  background-size: cover;
-  line-height: 60px;
-  width: 230px;
-  transform: translate(0, -40px);
-  text-align-last: center;
-  margin-bottom: -30px;
-  height: 60px;
-
+  background-size: var(--sprite-sheet-width) auto;
+  image-rendering: pixelated;
 }
 
-.message_emotes p {
-  overflow: hidden; /* Ensures the content is not revealed until the animation */
-  white-space: nowrap; /* Keeps the content on a single line */
-  margin: 0 auto; /* Gives that scrolling effect as the typing happens */
-  font-size: 0.5em;
-  animation:
-    typing 3.5s steps(40, end),
-    blink-caret .75s step-end infinite;
-}
-
-@keyframes typing {
+@keyframes animaplayer {
   from {
-    width: 0
+    background-position-x: 0;
   }
 
   to {
-    width: 100%
+    background-position-x: calc(-1 * var(--sprite-sheet-width));
   }
 }
 
-.current-player {
-  z-index: 10;
-  background-color: brown;
+.current-player.right {
+  background-position: 0 calc(-3 * var(--sprite-height));
+  animation: animaplayer 0.5s steps(4) infinite;
 }
 
-.dialog-box {
-  width: 300px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+.current-player.left {
+  background-position: 0 calc(-2 * var(--sprite-height));
+  animation: animaplayer 0.5s steps(4) infinite;
 }
 
-.dialog-header {
-  background-color: #4285f4;
-  color: white;
-  padding: 12px 16px;
-  font-size: 16px;
-  font-weight: bold;
+.current-player.top {
+  background-position: 0 calc(-1 * var(--sprite-height));
+  animation: animaplayer 0.5s steps(4) infinite;
 }
 
-.dialog-content {
-  padding: 20px;
-  font-size: 24px;
-  text-align: center;
-  min-height: 60px;
+.current-player.down {
+  background-position: 0 0;
+  animation: animaplayer 0.5s steps(4) infinite;
 }
 
-.math-expression {
-  font-family: "Times New Roman", serif;
-  font-style: italic;
+.current-player.idle-right {
+  background-position: 0 calc(-3 * var(--sprite-height));
+  animation: animaplayer 2s steps(2) infinite;
 }
 
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  padding: 12px 16px;
-  background-color: #f9f9f9;
-  border-top: 1px solid #eee;
+.current-player.idle-left {
+  background-position: 0 calc(-2 * var(--sprite-height));
+  animation: animaplayer 2s steps(2) infinite;
 }
 
-.button {
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
+.current-player.idle-top {
+  background-position: 0 calc(-1 * var(--sprite-height));
+  animation: animaplayer 2s steps(2) infinite;
 }
 
-.cancel-button {
-  background-color: #f1f1f1;
-  color: #333;
-  margin-right: 8px;
+.current-player.idle-down {
+  background-position: 0 0;
+  animation: animaplayer 2s steps(2) infinite;
 }
 
-.ok-button {
-  background-color: #4285f4;
-  color: white;
+/* Default idle state */
+.current-player.idle {
+  background-position: 0 0;
+  animation: none;
 }

@@ -6,28 +6,58 @@ import TileMap from "./tile_map.js";
 setRoot("app")
 const router = new Router(renderComponent)
 
+function createDebugPanel() {
+  const debugPanel = document.createElement('div');
+  debugPanel.id = 'debug-panel';
+  debugPanel.style.position = 'absolute';
+  debugPanel.style.bottom = '10px';
+  debugPanel.style.left = '10px';
+  debugPanel.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+  debugPanel.style.color = 'white';
+  debugPanel.style.padding = '10px';
+  debugPanel.style.borderRadius = '5px';
+  debugPanel.style.fontFamily = 'monospace';
+  debugPanel.style.fontSize = '12px';
+  debugPanel.style.maxWidth = '300px';
+  debugPanel.style.maxHeight = '150px';
+  debugPanel.style.overflow = 'auto';
+  debugPanel.style.zIndex = '1000';
+  document.body.appendChild(debugPanel);
+  return debugPanel;
+}
+
+function updateDebugInfo(info) {
+  const debugPanel = document.getElementById('debug-panel') || createDebugPanel();
+  debugPanel.innerHTML = Object.entries(info)
+    .map(([key, value]) => `<div><strong>${key}:</strong> ${value}</div>`)
+    .join('');
+}
+
 function Home() {
   const contanerRef = (elemnt) => {
-    const tileMap = new TileMap(elemnt, [2, 2, 2, 2, 3, 3, 3, 3, 3, 3])
-    tileMap.draw()
+    const mapData = [2, 3, 3, 3, 3, 3, 3, 3, 3, 3];
+    const tileMap = new TileMap(elemnt, mapData);
+    tileMap.draw();
   }
 
   return vdm("div", {}, vdm("div", { id: "game-container", ref: contanerRef }), CurrPlayer())
 }
 
 function NewUserPage() {
-  return (
-    vdm("div", { class: "contener_auth" },
-      vdm("div", { class: "pixel2" },
-        vdm("input", { type: "text", class: "input_name", placeholder: "your name", maxlength: "20" }),
-        vdm("button", { class: "btn_add_name" }, "play"),
-        EmotesCat(2, "insert your name")
-      )
-    ))
+  return vdm("div", { class: "contener_auth" },
+    vdm("div", { class: "contener_name" },
+      vdm("input", { class: "input_name" })
+      // EmotesCat(3)
+    )
+  )
+}
+
+function message(text) {
+  return vdm('div', { class: "message_image" }, text)
 }
 
 // defferent emotes cat 0 -> 14
-function EmotesCat(emoteNumber, message, random = true) {
+function EmotesCat(emoteNumber) {
   const root = document.documentElement
   const steps = {
     0: 1,
@@ -46,38 +76,11 @@ function EmotesCat(emoteNumber, message, random = true) {
     13: 2,
     14: 1
   }
-  function setanime() {
-    if (steps[emoteNumber]) {
-      root.style.setProperty('--EmotesNumber', emoteNumber)
-      root.style.setProperty('--EmotesSteps', steps[emoteNumber])
-    }
-    emoteNumber = Math.round(Math.random() * (13 - 1) + 1);
+  if (steps[emoteNumber]) {
+    root.style.setProperty('--EmotesNumber', emoteNumber)
+    root.style.setProperty('--EmotesSteps', steps[emoteNumber])
   }
-  setanime()
-  if (random) setInterval(() => setanime(), 3000);
-
-  return (
-    vdm("div", { class: "contaner_emotes" },
-      vdm("div", { class: "emotes_cat" }),
-      vdm("div", { class: "message_emotes" },
-        vdm("p", {}, message)
-      )
-    )
-  )
-}
-
-function WaitingRoom() {
-  return (
-    vdm("div", { class: "dialog-box" },
-      vdm("div", { class: "dialog-header" }, "Math Expression"),
-      vdm("div", { class: "dialog-content" },
-        vdm("span", { class: "math-expression" }, "10 ÷ 2")
-      ),
-      vdm("div", { class: "dialog-footer" },
-        vdm("button", { class: "button ok-button" }, "send")
-      )
-    )
-  )
+  return vdm("div", { class: "emotes_cat" })
 }
 
 function backToHome(path) {
@@ -90,71 +93,203 @@ function CurrPlayer() {
   let yPos = 0;
   let keysPressed = {};
   let animationFrameId;
-  let speedX = 5;
-  let speedY = 5;
-  let width = 0;
-  let height = 0;
+  let speedX = 0.5;
+  let speedY = 0.5;
+  let tileWidth = 0;
+  let tileHeight = 0;
+  let playerWidth = 0;
+  let playerHeight = 0;
+  let debugInfo = {};
+  let currentDirection = "idle";
+  let isMoving = false;
+  let lastDirection = "down";
 
   function initGame() {
     currPlayer = document.getElementById("current-player");
     const tileElement = document.querySelector('[data-row="1"][data-col="1"]');
     if (!tileElement) {
-      console.error("Could not find initial tile for positioning", tileElement);
+      updateDebugInfo({ "Error": "Could not find initial tile for positioning" });
       return;
     }
     const tileRect = tileElement.getBoundingClientRect();
-    width = tileRect.width;
-    height = tileRect.height;
-    speedX = Math.floor(width / 10);
-    speedY = Math.floor(height / 10);
-    console.log(`Tile size: ${width}x${height}, Speed: ${speedX},${speedY}`);
+    tileWidth = Math.round(tileRect.width);
+    tileHeight = Math.round(tileRect.height);
+    playerWidth = tileWidth - 5;
+    playerHeight = tileHeight - 5;
+    speedX = Math.max(1, Math.floor(tileWidth / 20));
+    speedY = Math.max(1, Math.floor(tileHeight / 20));
+
     if (currPlayer) {
-      currPlayer.style.width = `${width}px`;
-      currPlayer.style.height = `${height}px`;
-      currPlayer.style.top = `${tileRect.top}px`; // top make drop frame work by translate
-      currPlayer.style.left = `${tileRect.left}px`; // left make drop frame work by translate
-      console.log(`Player position: ${tileRect.top}px, ${tileRect.left}px`);
+      currPlayer.style.width = `${playerWidth}px`;
+      currPlayer.style.height = `${playerHeight}px`;
+      currPlayer.style.top = `${tileRect.top}px`;
+      currPlayer.style.left = `${tileRect.left}px`;
+
+
+      const spriteScaleFactor = playerHeight / 48;
+
+      currPlayer.style.setProperty('--sprite-width', `${48 * spriteScaleFactor}px`);
+      currPlayer.style.setProperty('--sprite-height', `${48 * spriteScaleFactor}px`);
+      currPlayer.style.setProperty('--sprite-sheet-width', `${192 * spriteScaleFactor}px`);
+
+      updatePlayerState("idle");
     }
+
+    debugInfo["Player Size"] = `Width: ${playerWidth}, Height: ${playerHeight}`;
     EventSystem.add(document, "keydown", (e) => { keysPressed[e.key] = true; });
     EventSystem.add(document, "keyup", (e) => { keysPressed[e.key] = false; });
+
     startGameLoop();
+  }
+
+  function updatePlayerState(state, direction) {
+    currPlayer.classList.remove("right", "left", "top", "down", "idle", "idle-right", "idle-left", "idle-top", "idle-down");
+
+    if (state === "idle") {
+      if (direction) {
+        currPlayer.classList.add(`idle-${direction}`);
+        lastDirection = direction;
+      } else {
+        currPlayer.classList.add(`idle-${lastDirection}`);
+      }
+
+      currentDirection = "idle";
+
+    } else {
+      currPlayer.classList.add(direction);
+      lastDirection = direction;
+      currentDirection = direction;
+    }
+
+    debugInfo["Current State"] = state;
+    debugInfo["Current Direction"] = direction || lastDirection;
+  }
+
+  function getPlayerTiles(playerX, playerY) {
+    const corners = [
+      { x: playerX, y: playerY },
+      { x: playerX + playerWidth, y: playerY },
+      { x: playerX, y: playerY + playerHeight },
+      { x: playerX + playerWidth, y: playerY + playerHeight }
+    ];
+    debugInfo["corners"] = corners.map(corner => `(${corner.x}, ${corner.y})`).join(", ");
+    const gridPositions = corners.map(corner => ({
+      gridX: Math.floor(corner.x / tileWidth),
+      gridY: Math.floor(corner.y / tileHeight)
+    }));
+    const uniqueTiles = [];
+    gridPositions.forEach(pos => {
+      const exists = uniqueTiles.some(tile =>
+        tile.gridX === pos.gridX && tile.gridY === pos.gridY
+      );
+
+      if (!exists) {
+        uniqueTiles.push(pos);
+      }
+    });
+    debugInfo["uniqueTiles"] = uniqueTiles.map(tile => `(${tile.gridY + 1}, ${tile.gridX + 1})`).join(", ");
+    return uniqueTiles;
+  }
+
+  function getTileInfo(gridX, gridY) {
+    const tileElement = document.querySelector(
+      `[data-row="${gridY + 1}"][data-col="${gridX + 1}"]`
+    );
+    return {
+      walkable: tileElement ? (tileElement.id === "grass") : false
+    };
+  }
+
+  function canMove(newX, newY) {
+    const tiles = getPlayerTiles(newX, newY);
+    const canMove = tiles.every(tile => {
+      const tileInfo = getTileInfo(tile.gridX, tile.gridY);
+      return tileInfo.walkable;
+    });
+    debugInfo["tiles"] = tiles.map(tile => `(${tile.gridY + 1}, ${tile.gridX + 1})`).join(", ");
+    debugInfo["Can Move"] = canMove ? "Yes" : "No";
+    return canMove;
+  }
+
+  function updateDebugWithTiles() {
+    const tiles = getPlayerTiles(xPos, yPos);
+
+    debugInfo["Player Position"] = `X: ${xPos}, Y: ${yPos}`;
+    debugInfo["Player Grid"] = `X: ${Math.floor(xPos / tileWidth)}, Y: ${Math.floor(yPos / tileHeight)}`;
+    debugInfo["Player Corner Grid"] = `X: ${Math.floor((xPos + playerWidth - 1) / tileWidth)}, Y: ${Math.floor((yPos + playerHeight - 1) / tileHeight)}`;
+    debugInfo["Current Direction"] = currentDirection;
+    debugInfo["Last Direction"] = lastDirection;
+    debugInfo["Is Moving"] = isMoving ? "Yes" : "No";
+
+    debugInfo["Current Tiles"] = tiles.map(tile =>
+      `(${tile.gridY+1}, ${tile.gridX+1})`
+    ).join(", ");
+
+    tiles.forEach((tile, index) => {
+      const tileInfo = getTileInfo(tile.gridX, tile.gridY);
+      debugInfo[`Tile ${index + 1}`] =
+        `(${tile.gridX}, ${tile.gridY}) - Type: ${tileInfo.id || 'unknown'} - ${tileInfo.walkable ? 'walkable' : 'blocked'}`;
+    });
+
+    updateDebugInfo(debugInfo);
   }
 
   function startGameLoop() {
     function gameLoop() {
-      if (keysPressed["ArrowUp"]) yPos -= speedY;
-      if (keysPressed["ArrowDown"]) yPos += speedY;
-      if (keysPressed["ArrowLeft"]) xPos -= speedX;
-      if (keysPressed["ArrowRight"]) xPos += speedX;
+      let newXPos = xPos;
+      let newYPos = yPos;
+      let moved = false;
+      let direction = lastDirection;
 
-      const tile = document.elementFromPoint(xPos, yPos);
-      if (tile && tile.classList.contains("tile")) {
-        console.log("Collision with tile detected");
+      if (keysPressed["ArrowUp"]) {
+        newYPos -= speedY;
+        direction = "top";
+        moved = true;
+      } else if (keysPressed["ArrowDown"]) {
+        newYPos += speedY;
+        direction = "down";
+        moved = true;
       }
 
-      if (currPlayer) {
-        currPlayer.style.transform = `translate(${xPos}px, ${yPos}px)`;
+      if (keysPressed["ArrowLeft"]) {
+        newXPos -= speedX;
+        direction = "left";
+        moved = true;
+      } else if (keysPressed["ArrowRight"]) {
+        newXPos += speedX;
+        direction = "right";
+        moved = true;
       }
 
+      if (moved) {
+        if (currentDirection !== direction) {
+          updatePlayerState("moving", direction);
+        }
+      } else if (isMoving) {
+        updatePlayerState("idle", lastDirection);
+      }
+
+      isMoving = moved;
+
+      if (newXPos !== xPos && canMove(newXPos, yPos)) xPos = newXPos;
+      if (newYPos !== yPos && canMove(xPos, newYPos)) yPos = newYPos;
+
+      currPlayer.style.transform = `translate(${xPos}px, ${yPos}px)`;
+
+      updateDebugWithTiles();
       animationFrameId = requestAnimationFrame(gameLoop);
     }
-
     animationFrameId = requestAnimationFrame(gameLoop);
   }
 
   setTimeout(initGame, 10);
-
   return vdm("div", {
     id: "current-player",
-    class: "current-player"
+    class: "current-player idle-down" // default state
   });
 }
-
-router
-  .add("/", NewUserPage)
-  .add("/room", WaitingRoom)
-  .add("/game", Home)
-
+router.add("/", Home)
+  .add("/auth", NewUserPage)
 
 router.setNotFound(() =>
   vdm("div", {},
