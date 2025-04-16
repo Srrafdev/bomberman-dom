@@ -2,7 +2,7 @@
   image-rendering: pixelated;
   -webkit-font-smoothing: none;
   text-rendering: optimizeSpeed;
-  font-family: 'Press Start 2P', monospace;
+  /* font-family: 'Press Start 2P', monospace; */
 }
 
 :root {

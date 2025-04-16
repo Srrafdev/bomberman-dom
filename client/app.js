@@ -196,15 +196,15 @@ function CurrPlayer() {
     if (currPlayer) {
       currPlayer.style.width = `${playerWidth}px`;
       currPlayer.style.height = `${playerHeight}px`;
-      currPlayer.style.top = `${tileRect.top}px`;
-      currPlayer.style.left = `${tileRect.left}px`;
+      currPlayer.style.top = `${tileRect.top + 2.5}px`;
+      currPlayer.style.left = `${tileRect.left + 2.5}px`;
 
 
-      const spriteScaleFactor = playerHeight / 48;
+      const spriteScaleFactor = playerHeight / 32;
 
-      currPlayer.style.setProperty('--sprite-width', `${48 * spriteScaleFactor}px`);
-      currPlayer.style.setProperty('--sprite-height', `${48 * spriteScaleFactor}px`);
-      currPlayer.style.setProperty('--sprite-sheet-width', `${192 * spriteScaleFactor}px`);
+      currPlayer.style.setProperty('--sprite-width', `${32 * spriteScaleFactor}px`);
+      currPlayer.style.setProperty('--sprite-height', `${32 * spriteScaleFactor}px`);
+      currPlayer.style.setProperty('--sprite-sheet-width', `${128 * spriteScaleFactor}px`);
 
       updatePlayerState("idle");
     }
@@ -248,26 +248,18 @@ function CurrPlayer() {
     ];
     debugInfo["corners"] = corners.map(corner => `(${corner.x}, ${corner.y})`).join(", ");
     const gridPositions = corners.map(corner => ({
-      gridX: Math.floor(corner.x / tileWidth),
-      gridY: Math.floor(corner.y / tileHeight)
+      gridY: Math.floor(corner.x / tileWidth),
+      gridX: Math.floor(corner.y / tileHeight)
     }));
-    const uniqueTiles = [];
-    gridPositions.forEach(pos => {
-      const exists = uniqueTiles.some(tile =>
-        tile.gridX === pos.gridX && tile.gridY === pos.gridY
-      );
-
-      if (!exists) {
-        uniqueTiles.push(pos);
-      }
-    });
-    debugInfo["uniqueTiles"] = uniqueTiles.map(tile => `(${tile.gridY + 1}, ${tile.gridX + 1})`).join(", ");
-    return uniqueTiles;
+    console.log(gridPositions);
+    
+    debugInfo["uniqueTiles"] = gridPositions.map(tile => `(${tile.gridX + 1}, ${tile.gridY + 1})`).join(", ");
+    return gridPositions;
   }
 
-  function getTileInfo(gridX, gridY) {
+  function getTileInfo(gridY, gridX) {
     const tileElement = document.querySelector(
-      `[data-row="${gridY + 1}"][data-col="${gridX + 1}"]`
+      `[data-row="${gridX + 1}"][data-col="${gridY + 1}"]`
     );
     return {
       walkable: tileElement ? (tileElement.id === "grass") : false
@@ -276,11 +268,11 @@ function CurrPlayer() {
 
   function canMove(newX, newY) {
     const tiles = getPlayerTiles(newX, newY);
+    debugInfo["tiles"] = tiles.map(tile => `(${tile.gridX + 1}, ${tile.gridY + 1})`).join(", ");
     const canMove = tiles.every(tile => {
-      const tileInfo = getTileInfo(tile.gridX, tile.gridY);
+      const tileInfo = getTileInfo(tile.gridY, tile.gridX);
       return tileInfo.walkable;
     });
-    debugInfo["tiles"] = tiles.map(tile => `(${tile.gridY + 1}, ${tile.gridX + 1})`).join(", ");
     debugInfo["Can Move"] = canMove ? "Yes" : "No";
     return canMove;
   }
@@ -296,13 +288,13 @@ function CurrPlayer() {
     debugInfo["Is Moving"] = isMoving ? "Yes" : "No";
 
     debugInfo["Current Tiles"] = tiles.map(tile =>
-      `(${tile.gridY + 1}, ${tile.gridX + 1})`
+      `(${tile.gridX + 1}, ${tile.gridY + 1})`
     ).join(", ");
 
     tiles.forEach((tile, index) => {
-      const tileInfo = getTileInfo(tile.gridX, tile.gridY);
+      const tileInfo = getTileInfo(tile.gridY, tile.gridX);
       debugInfo[`Tile ${index + 1}`] =
-        `(${tile.gridX}, ${tile.gridY}) - Type: ${tileInfo.id || 'unknown'} - ${tileInfo.walkable ? 'walkable' : 'blocked'}`;
+        `(${tile.gridY}, ${tile.gridX}) - Type: ${tileInfo.id || 'unknown'} - ${tileInfo.walkable ? 'walkable' : 'blocked'}`;
     });
 
     updateDebugInfo(debugInfo);

@@ -7,6 +7,9 @@
   display: flex;
   gap: 10px;
 }
+body{
+  overflow: hidden;
+}
 
 .emotes_cat {
   background-image: url('Assets/Sprout Lands - Sprites - Basic pack/UI/Sprite sheets/Dialouge UI/Emotes/Teemo Basic emote animations sprite sheet.png');
