@@ -318,6 +318,8 @@ function CurrPlayer() {
       let newYPos = yPos;
       let moved = false;
       let direction = lastDirection;
+
+      // -------------------- added by ayoub
       let tas7i7BombX = 1
       let tas7i7BombY = 1
 
@@ -417,7 +419,7 @@ function CurrPlayer() {
 
       // ----------------------- bomb ayoub
       if (keysPressed[" "]) {
-        let aaa = tileMap.setTile(gridY + tas7i7BombY, gridX + tas7i7BombX, 4)
+        tileMap.setTile(gridY + tas7i7BombY, gridX + tas7i7BombX, 4)
         keysPressed[" "] = false
       }
       // ------------------------------------
