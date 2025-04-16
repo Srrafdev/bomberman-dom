@@ -3,6 +3,10 @@
   --EmotesSteps: 1;
 }
 
+body {
+  overflow: hidden;
+}
+
 .contaner_emotes {
   display: flex;
   gap: 10px;
@@ -44,9 +48,12 @@
 }
 
 .message_emotes p {
-  overflow: hidden; /* Ensures the content is not revealed until the animation */
-  white-space: nowrap; /* Keeps the content on a single line */
-  margin: 0 auto; /* Gives that scrolling effect as the typing happens */
+  overflow: hidden;
+  /* Ensures the content is not revealed until the animation */
+  white-space: nowrap;
+  /* Keeps the content on a single line */
+  margin: 0 auto;
+  /* Gives that scrolling effect as the typing happens */
   font-size: 0.5em;
   animation:
     typing 3.5s steps(40, end),
@@ -114,13 +121,13 @@
 
 .current-player.idle-top {
   background-image: url('Assets/character/walk-back.png');
-} 
+}
 
 .current-player.idle-down {
   background-image: url('Assets/character/walk-front.png');
 }
 
- /* Default idle state */
+/* Default idle state */
 .current-player.idle {
   background-image: url('Assets/character/walk-front.png');
   animation: none;
