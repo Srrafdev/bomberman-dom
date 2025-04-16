@@ -3,6 +3,11 @@
   --EmotesSteps: 1;
 }
 
+.contaner_emotes {
+  display: flex;
+  gap: 10px;
+}
+
 .emotes_cat {
   background-image: url('Assets/Sprout Lands - Sprites - Basic pack/UI/Sprite sheets/Dialouge UI/Emotes/Teemo Basic emote animations sprite sheet.png');
   width: 32px;
@@ -22,6 +27,39 @@
   to {
     background-position-x: calc(var(--EmotesSteps)*-32px);
     /* 8 frames * 32px = 256px */
+  }
+}
+
+.message_emotes {
+  background-image: url("Assets/Sprout Lands - Sprites - Basic pack/UI/Sprite sheets/Dialouge UI/dialog box big.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  line-height: 60px;
+  width: 230px;
+  transform: translate(0, -40px);
+  text-align-last: center;
+  margin-bottom: -30px;
+  height: 60px;
+
+}
+
+.message_emotes p {
+  overflow: hidden; /* Ensures the content is not revealed until the animation */
+  white-space: nowrap; /* Keeps the content on a single line */
+  margin: 0 auto; /* Gives that scrolling effect as the typing happens */
+  font-size: 0.5em;
+  animation:
+    typing 3.5s steps(40, end),
+    blink-caret .75s step-end infinite;
+}
+
+@keyframes typing {
+  from {
+    width: 0
+  }
+
+  to {
+    width: 100%
   }
 }
 

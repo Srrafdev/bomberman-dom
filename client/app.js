@@ -1,3 +1,4 @@
+import { waitingChattingPage } from "./htmls.js";
 import { EventSystem, Router, setRoot, StateManagement } from "./miniframework.js";
 import { renderComponent } from "./miniframework.js";
 import { vdm } from "./miniframework.js";
@@ -43,21 +44,80 @@ function Home() {
   return vdm("div", {}, vdm("div", { id: "game-container", ref: contanerRef }), CurrPlayer())
 }
 
+// -------------------------- yassine
+let ws
+export let room = {}
+export let left_time = 20
 function NewUserPage() {
-  return vdm("div", { class: "contener_auth" },
-    vdm("div", { class: "contener_name" },
-      vdm("input", { class: "input_name" })
-      // EmotesCat(3)
-    )
-  )
-}
 
-function message(text) {
-  return vdm('div', { class: "message_image" }, text)
+  function enter(event) {
+    event.preventDefault();
+    let nickname = document.getElementById("nickname").value;
+
+    if (!nickname) {
+      alert("Please enter a nickname.");
+      return;
+    }
+    if (nickname.length < 1) {
+      alert("Nickname must be 2 characters or more.");
+      return;
+    }
+    ws = new WebSocket("ws://localhost:8080");
+
+    // onopen event is triggered when the connection is established
+    ws.onopen = function () {
+      console.log("Connected to server");
+      ws.send(JSON.stringify({ type: "set_nickname", nickname: nickname }));
+    };
+
+    ws.onmessage = function (event) {
+      // console.log("some data received", event);
+      const data = JSON.parse(event.data);
+
+      console.log(data.type, data.players);
+      if (data.type === "room_info") {
+        // console.log("Room info:", data);
+        room = data;
+
+      } else if (data.state === "waiting" && (data.type === "new_player" || data.type === "player_left")) {
+        room.players = data.players
+        if (data.type === "player_left" && room.players.length === 1) {
+          left_time = 20
+        }
+        renderComponent(waitingChattingPage, false);
+      } else if (data.type === "countdown") {
+        left_time = data.timeLeft
+        renderComponent(waitingChattingPage, false)
+      } else if (data.type === "player_left") {
+        // Handle player leaving
+
+      }
+    };
+
+    ws.onclose = function () {
+      console.log("Disconnected from server");
+      router.link("/");
+
+    };
+
+    ws.onerror = function (error) {
+      console.error("WebSocket error:", error);
+    };
+    event.target.href = "/waiting"
+    router.link("/waiting");
+  }
+  return (
+    vdm("div", { class: "contener_auth" },
+      vdm("div", { class: "pixel2" },
+        vdm("input", { type: "text", class: "input_name", id: "nickname", placeholder: "your name", maxlength: "20" }),
+        vdm("button", { class: "btn_add_name", onClick: (e) => enter(e) }, "play"),
+        EmotesCat(2, "insert your name")
+      )
+    ))
 }
 
 // defferent emotes cat 0 -> 14
-function EmotesCat(emoteNumber) {
+function EmotesCat(emoteNumber, message, random = true) {
   const root = document.documentElement
   const steps = {
     0: 1,
@@ -76,12 +136,26 @@ function EmotesCat(emoteNumber) {
     13: 2,
     14: 1
   }
-  if (steps[emoteNumber]) {
-    root.style.setProperty('--EmotesNumber', emoteNumber)
-    root.style.setProperty('--EmotesSteps', steps[emoteNumber])
+  function setanime() {
+    if (steps[emoteNumber]) {
+      root.style.setProperty('--EmotesNumber', emoteNumber)
+      root.style.setProperty('--EmotesSteps', steps[emoteNumber])
+    }
+    emoteNumber = Math.round(Math.random() * (13 - 1) + 1);
   }
-  return vdm("div", { class: "emotes_cat" })
+  setanime()
+  if (random) setInterval(() => setanime(), 3000);
+
+  return (
+    vdm("div", { class: "contaner_emotes" },
+      vdm("div", { class: "emotes_cat" }),
+      vdm("div", { class: "message_emotes" },
+        vdm("p", {}, message)
+      )
+    )
+  )
 }
+
 
 function backToHome(path) {
   return vdm("button", { onClick: () => router.link(path) }, `go to ${path}`)
@@ -222,7 +296,7 @@ function CurrPlayer() {
     debugInfo["Is Moving"] = isMoving ? "Yes" : "No";
 
     debugInfo["Current Tiles"] = tiles.map(tile =>
-      `(${tile.gridY+1}, ${tile.gridX+1})`
+      `(${tile.gridY + 1}, ${tile.gridX + 1})`
     ).join(", ");
 
     tiles.forEach((tile, index) => {
@@ -288,8 +362,10 @@ function CurrPlayer() {
     class: "current-player idle-down" // default state
   });
 }
-router.add("/", Home)
-  .add("/auth", NewUserPage)
+router
+  .add("/", NewUserPage)
+  .add("/waiting", waitingChattingPage)
+  .add("/game", Home)
 
 router.setNotFound(() =>
   vdm("div", {},
