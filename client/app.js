@@ -34,14 +34,25 @@ function updateDebugInfo(info) {
     .join('');
 }
 
-function Home() {
-  const contanerRef = (elemnt) => {
-    const mapData = [2, 3, 3, 3, 3, 3, 3, 3, 3, 3];
-    const tileMap = new TileMap(elemnt, mapData);
-    tileMap.draw();
+function Home(rows = 11, columns = 15) {
+  const contanerRef = (container) => {
+    const containerWidth = window.innerWidth
+    const containerHeight = window.innerHeight;
+
+    const tileSize = Math.min(
+      containerWidth / columns,
+      containerHeight / rows
+    );
+
+    container.style.gridTemplateRows = `repeat(${rows}, ${tileSize}px)`;
+    container.style.gridTemplateColumns = `repeat(${columns}, ${tileSize}px)`;
   }
 
-  return vdm("div", {}, vdm("div", { id: "game-container", ref: contanerRef }), CurrPlayer())
+  const mapData = [10, 11, 11, 11, 11, 11, 11, 11, 11, 11];
+  const tileMap = new TileMap(mapData);
+  const tiles = tileMap.draw()
+
+  return vdm("div", {}, vdm("div", { id: "game-container", ref: contanerRef }, ...tiles), CurrPlayer())
 }
 
 // -------------------------- yassine
@@ -251,8 +262,7 @@ function CurrPlayer() {
       gridY: Math.floor(corner.x / tileWidth),
       gridX: Math.floor(corner.y / tileHeight)
     }));
-    console.log(gridPositions);
-    
+
     debugInfo["uniqueTiles"] = gridPositions.map(tile => `(${tile.gridX + 1}, ${tile.gridY + 1})`).join(", ");
     return gridPositions;
   }
@@ -354,6 +364,7 @@ function CurrPlayer() {
     class: "current-player idle-down" // default state
   });
 }
+
 router
   .add("/", NewUserPage)
   .add("/waiting", waitingChattingPage)
