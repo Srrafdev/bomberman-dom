@@ -34,7 +34,8 @@ const __dirname = dirname(__filename);
 const baseDir = path.join(__dirname, 'client');
 const indexPath = path.join(baseDir, 'index.html');
 function handleRequest(req, res) {
-  if (req.url === "/waiting") { // || req.url === "/game"
+  console.log(req.url)
+  if (req.url === "/waiting" || req.url === "/game" ) {
     console.log("redirecting")
     res.writeHead(302, { Location: '/' });
     res.end();
@@ -99,7 +100,7 @@ wss.on("connection", (ws) => {
         rooms[roomID] = {
           players: [nickname],
           state: "waiting",
-          timer: 20,
+          timer: 5,
         };
       } else {
         rooms[roomID].players.push(nickname);
@@ -131,14 +132,15 @@ wss.on("connection", (ws) => {
         state: rooms[roomID].state,
       });
     }
-
     if (data.type === "chat") {
-      // Broadcast chat message to room
+      console.log(nickname)
       broadcastToRoom(roomID, {
         type: "chat",
-        message: `${nickname}: ${data.message}`,
+        message: data.message,
+        nickname: nickname,
       });
     }
+    //plqyer state
   });
 
   // Handle WebSocket close event
@@ -219,5 +221,5 @@ function startRoomCountdown(roomID) {
 
 // Make the server listen on port 5000
 server.listen(8080, () => {
-  console.log("Server is running on http://localhost:8080");
+  console.log("Server is running on http://localhost:5000");
 });

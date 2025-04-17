@@ -1,11 +1,11 @@
 import { waitingChattingPage } from "./htmls.js";
-import { EventSystem, Router, setRoot, StateManagement } from "./miniframework.js";
+import { EventSystem, Router, setRoot } from "./miniframework.js";
 import { renderComponent } from "./miniframework.js";
 import { vdm } from "./miniframework.js";
-import TileMap from "./tile_map.js";
 
 setRoot("app")
 const router = new Router(renderComponent)
+export { room, left_time, sendMessage, messages }
 
 function createDebugPanel() {
   const debugPanel = document.createElement('div');
@@ -75,7 +75,7 @@ function Game() {
           map[row][col] = 11
 
         } else if (map[row][col] === 0) {
-          let random = Math.round(Math.random() * (9 - 0) + 0);
+          let random = Math.round(Math.random() * 9);
           map[row][col] = por[random]
         }
       }
@@ -132,66 +132,82 @@ function Game() {
 
 // -------------------------- yassine
 let ws
-export let room = {}
-export let left_time = 20
-function NewUserPage() {
+let room = {}
+let left_time = 20
+let nickname
+let messages = []
+function sendMessage(e) {
+  e.preventDefault();
+  let message = document.getElementById("message").value;
+  document.getElementById("message").value = "";
+  console.log("send message", message);
+  ws.send(JSON.stringify({ type: "chat", message: message, nickname: nickname }));
+}
 
-  function enter(event) {
-    event.preventDefault();
-    let nickname = document.getElementById("nickname").value;
+function enter(event) {
+  messages = []
+  event.preventDefault();
+  nickname = document.getElementById("nickname").value;
 
-    if (!nickname) {
-      alert("Please enter a nickname.");
-      return;
-    }
-    if (nickname.length < 1) {
-      alert("Nickname must be 2 characters or more.");
-      return;
-    }
-    ws = new WebSocket("ws://localhost:8080");
-
-    // onopen event is triggered when the connection is established
-    ws.onopen = function () {
-      console.log("Connected to server");
-      ws.send(JSON.stringify({ type: "set_nickname", nickname: nickname }));
-    };
-
-    ws.onmessage = function (event) {
-      // console.log("some data received", event);
-      const data = JSON.parse(event.data);
-
-      console.log(data.type, data.players);
-      if (data.type === "room_info") {
-        // console.log("Room info:", data);
-        room = data;
-
-      } else if (data.state === "waiting" && (data.type === "new_player" || data.type === "player_left")) {
-        room.players = data.players
-        if (data.type === "player_left" && room.players.length === 1) {
-          left_time = 20
-        }
-        renderComponent(waitingChattingPage, false);
-      } else if (data.type === "countdown") {
-        left_time = data.timeLeft
-        renderComponent(waitingChattingPage, false)
-      } else if (data.type === "player_left") {
-        // Handle player leaving
-
-      }
-    };
-
-    ws.onclose = function () {
-      console.log("Disconnected from server");
-      router.link("/");
-
-    };
-
-    ws.onerror = function (error) {
-      console.error("WebSocket error:", error);
-    };
-    event.target.href = "/waiting"
-    router.link("/waiting");
+  if (!nickname) {
+    alert("Please enter a nickname.");
+    return;
   }
+  if (nickname.length < 1) {
+    alert("Nickname must be 2 characters or more.");
+    return;
+  }
+  ws = new WebSocket("ws://localhost:8080");
+
+  // onopen event is triggered when the connection is established
+  ws.onopen = function () {
+    ws.send(JSON.stringify({ type: "set_nickname", nickname: nickname }));
+  };
+
+  ws.onmessage = function (event) {
+    const data = JSON.parse(event.data);
+
+    if (data.type === "room_info") {
+      room = data;
+
+    } else if (data.state === "waiting" && (data.type === "new_player" || data.type === "player_left")) {
+      room.players = data.players
+      if (data.type === "player_left" && room.players.length === 1) {
+        left_time = 20
+      }
+      renderComponent(waitingChattingPage, false);
+    } else if (data.type === "countdown") {
+      left_time = data.timeLeft
+      renderComponent(waitingChattingPage, false)
+      if (left_time === 0){
+        router.link("/game")
+      }
+
+    } else if (data.type === "player_left") {
+      // Handle player leaving in the game
+
+    } else if (data.type === "chat") {
+      let is_mine = data.nickname === nickname
+      console.log(data.nickname, nickname)
+      messages.push({ nickname: data.nickname, message: data.message, is_mine: is_mine });
+      renderComponent(waitingChattingPage, false);
+    }
+  };
+
+  ws.onclose = function () {
+    console.log("Disconnected from server");
+    router.link("/");
+
+  };
+
+  ws.onerror = function (error) {
+    console.error("WebSocket error:", error);
+  };
+  event.target.href = "/waiting"
+  router.link("/waiting");
+}
+
+function NewUserPage() {
   return (
     vdm("div", { class: "contener_auth" },
       vdm("div", { class: "pixel2" },
