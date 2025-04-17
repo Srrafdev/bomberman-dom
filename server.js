@@ -34,7 +34,6 @@ const __dirname = dirname(__filename);
 const baseDir = path.join(__dirname, 'client');
 const indexPath = path.join(baseDir, 'index.html');
 function handleRequest(req, res) {
-  console.log(req.url)
   if (req.url === "/waiting" || req.url === "/game" ) {
     console.log("redirecting")
     res.writeHead(302, { Location: '/' });
@@ -87,7 +86,9 @@ wss.on("connection", (ws) => {
   // Handle nickname input (sent by the client)
   ws.on("message", (message) => {
     const data = JSON.parse(message);
-
+const wsFuncton = {
+  
+}
     if (data.type === "set_nickname") {
       nickname = data.nickname;
       ws.nickname = nickname;
@@ -132,6 +133,7 @@ wss.on("connection", (ws) => {
         state: rooms[roomID].state,
       });
     }
+
     if (data.type === "chat") {
       console.log(nickname)
       broadcastToRoom(roomID, {

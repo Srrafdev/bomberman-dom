@@ -180,6 +180,7 @@ function enter(event) {
       left_time = data.timeLeft
       renderComponent(waitingChattingPage, false)
       if (left_time === 0){
+        ws.send(JSON.stringify({ type: "creat_map", nickname: nickname }))
         router.link("/game")
       }
 
@@ -203,7 +204,6 @@ function enter(event) {
   ws.onerror = function (error) {
     console.error("WebSocket error:", error);
   };
-  event.target.href = "/waiting"
   router.link("/waiting");
 }
 
