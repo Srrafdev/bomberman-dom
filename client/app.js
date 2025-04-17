@@ -248,29 +248,77 @@ function CurrPlayer() {
     ];
     debugInfo["corners"] = corners.map(corner => `(${corner.x}, ${corner.y})`).join(", ");
     const gridPositions = corners.map(corner => ({
-      gridY: Math.floor(corner.x / tileWidth),
-      gridX: Math.floor(corner.y / tileHeight)
+      gridX: Math.floor(corner.x / tileWidth),
+      gridY: Math.floor(corner.y / tileHeight)
     }));
-    console.log(gridPositions);
-    
-    debugInfo["uniqueTiles"] = gridPositions.map(tile => `(${tile.gridX + 1}, ${tile.gridY + 1})`).join(", ");
-    return gridPositions;
+    const uniqueTiles = [];
+    gridPositions.forEach(pos => {
+      const exists = uniqueTiles.some(tile =>
+        tile.gridX === pos.gridX && tile.gridY === pos.gridY
+      );
+
+      if (!exists) {
+        uniqueTiles.push(pos);
+      }
+    });
+    debugInfo["uniqueTiles"] = uniqueTiles.map(tile => `(${tile.gridX + 1}, ${tile.gridY + 1})`).join(", ");
+    return {
+      corners,
+      uniqueTiles
+    };
   }
 
-  function getTileInfo(gridY, gridX) {
+  function getTileInfo(gridX, gridY) {
     const tileElement = document.querySelector(
-      `[data-row="${gridX + 1}"][data-col="${gridY + 1}"]`
+      `[data-row="${gridY + 1}"][data-col="${gridX + 1}"]`
     );
     return {
+      id: tileElement.id,
       walkable: tileElement ? (tileElement.id === "grass") : false
     };
   }
 
+  function getPlayerGrid() {
+    return {
+      x: Math.floor(xPos / tileWidth),
+      y: Math.floor(yPos / tileHeight),
+    }
+  }
+
+  function checkCorners(y, x, corners) {
+    // const tileInfo = getTileInfo(y, x)
+    // console.log(y, x, corners[0]);
+    let cornerTiles = getPlayerTiles(corners[0].x, corners[0].y);
+    let playerGrid = getPlayerGrid();
+    console.log(playerGrid.x+1, playerGrid.y+1);
+    
+    // console.log(cornerTiles.uniqueTiles);
+    let cornerTilesBool = cornerTiles.uniqueTiles.map(
+      tile => getTileInfo(tile.gridX, tile.gridY)
+    );
+    debugInfo["cornerTilesBool"] = cornerTilesBool.map(info => info.walkable).join(", ");
+    // debugInfo["cornerTilesBool"] = cornerTiles.uniqueTiles.map(tile => `(${tile.gridY + 1}, ${tile.gridX + 1})`).join(", ");
+    // debugInfo["cornerTilesBool"] = tileInfo.map(info => info.walkable).join(", ");
+    // const tileValue = getPlayerTiles(y, x)
+    // debugInfo["cornerTilesValues"] = tileValue.map(info => info.uniqueTiles.map(tile => `(${tile.gridY + 1}, ${tile.gridX + 1})`).join(", ")).join(", ");
+  }
+
   function canMove(newX, newY) {
     const tiles = getPlayerTiles(newX, newY);
-    debugInfo["tiles"] = tiles.map(tile => `(${tile.gridX + 1}, ${tile.gridY + 1})`).join(", ");
-    const canMove = tiles.every(tile => {
-      const tileInfo = getTileInfo(tile.gridY, tile.gridX);
+    debugInfo["tiles"] = tiles.uniqueTiles.map(tile => `(${tile.gridX + 1}, ${tile.gridY + 1})`).join(", ");
+    tiles.uniqueTiles.forEach((tile, index) => {
+      const tileInfo = getTileInfo(tile.gridX, tile.gridY);
+      console.log(tile.gridX, tile.gridY);
+      
+      debugInfo[`Tile ${index + 1}`] =
+        `(${tile.gridX+1}, ${tile.gridY+1}) - Type: ${tileInfo.id || 'unknown'} - ${tileInfo.walkable ? 'walkable' : 'blocked'}`;
+    });
+    const canMove = tiles.uniqueTiles.every(tile => {
+      const tileInfo = getTileInfo(tile.gridX, tile.gridY);
+      if (tileInfo.walkable === false) {
+        console.log(tiles.corners);
+        checkCorners(tile.gridY, tile.gridX, tiles.corners);
+      }
       return tileInfo.walkable;
     });
     debugInfo["Can Move"] = canMove ? "Yes" : "No";
@@ -287,15 +335,9 @@ function CurrPlayer() {
     debugInfo["Last Direction"] = lastDirection;
     debugInfo["Is Moving"] = isMoving ? "Yes" : "No";
 
-    debugInfo["Current Tiles"] = tiles.map(tile =>
+    debugInfo["Current Tiles"] = tiles.uniqueTiles.map(tile =>
       `(${tile.gridX + 1}, ${tile.gridY + 1})`
     ).join(", ");
-
-    tiles.forEach((tile, index) => {
-      const tileInfo = getTileInfo(tile.gridY, tile.gridX);
-      debugInfo[`Tile ${index + 1}`] =
-        `(${tile.gridY}, ${tile.gridX}) - Type: ${tileInfo.id || 'unknown'} - ${tileInfo.walkable ? 'walkable' : 'blocked'}`;
-    });
 
     updateDebugInfo(debugInfo);
   }
