@@ -280,22 +280,31 @@ function CurrPlayer() {
 
   function getPlayerGrid() {
     return {
-      x: Math.floor(xPos / tileWidth),
-      y: Math.floor(yPos / tileHeight),
+      x: Math.round(xPos / tileWidth) + 1,
+      y: Math.round(yPos / tileHeight) + 1,
     }
   }
 
-  function checkCorners(y, x, corners) {
+  function checkCorners(corners) {
     // const tileInfo = getTileInfo(y, x)
     // console.log(y, x, corners[0]);
     let cornerTiles = getPlayerTiles(corners[0].x, corners[0].y);
+    console.log(cornerTiles);
+    for (let index = 0; index < cornerTiles.corners.length; index++) {
+      console.log(cornerTiles.corners[index]);
+    }
+    debugInfo["corners--"] = cornerTiles.corners.map(corner => `(${corner.x}, ${corner.y})`).join(", ");
     let playerGrid = getPlayerGrid();
-    console.log(playerGrid.x+1, playerGrid.y+1);
-    
+    // debugInfo["currentTiles"] = cornerTiles.uniqueTiles.map(tile => `(${tile.gridX + 1}, ${tile.gridY + 1})`).join(", "); 
+    debugInfo["Player Cordination"] = `X: ${playerGrid.x}, Y: ${playerGrid.y}`;
     // console.log(cornerTiles.uniqueTiles);
+    for (let index = 0; index < cornerTiles.uniqueTiles.length; index++) {
+      console.log(cornerTiles.uniqueTiles[index]);
+    }
     let cornerTilesBool = cornerTiles.uniqueTiles.map(
       tile => getTileInfo(tile.gridX, tile.gridY)
     );
+
     debugInfo["cornerTilesBool"] = cornerTilesBool.map(info => info.walkable).join(", ");
     // debugInfo["cornerTilesBool"] = cornerTiles.uniqueTiles.map(tile => `(${tile.gridY + 1}, ${tile.gridX + 1})`).join(", ");
     // debugInfo["cornerTilesBool"] = tileInfo.map(info => info.walkable).join(", ");
@@ -308,16 +317,16 @@ function CurrPlayer() {
     debugInfo["tiles"] = tiles.uniqueTiles.map(tile => `(${tile.gridX + 1}, ${tile.gridY + 1})`).join(", ");
     tiles.uniqueTiles.forEach((tile, index) => {
       const tileInfo = getTileInfo(tile.gridX, tile.gridY);
-      console.log(tile.gridX, tile.gridY);
-      
+      // console.log(tile.gridX, tile.gridY);
+
       debugInfo[`Tile ${index + 1}`] =
-        `(${tile.gridX+1}, ${tile.gridY+1}) - Type: ${tileInfo.id || 'unknown'} - ${tileInfo.walkable ? 'walkable' : 'blocked'}`;
+        `(${tile.gridX + 1}, ${tile.gridY + 1}) - Type: ${tileInfo.id || 'unknown'} - ${tileInfo.walkable ? 'walkable' : 'blocked'}`;
     });
     const canMove = tiles.uniqueTiles.every(tile => {
       const tileInfo = getTileInfo(tile.gridX, tile.gridY);
       if (tileInfo.walkable === false) {
-        console.log(tiles.corners);
-        checkCorners(tile.gridY, tile.gridX, tiles.corners);
+        // console.log(tiles.corners);
+        checkCorners(tiles.corners);
       }
       return tileInfo.walkable;
     });
@@ -329,7 +338,7 @@ function CurrPlayer() {
     const tiles = getPlayerTiles(xPos, yPos);
 
     debugInfo["Player Position"] = `X: ${xPos}, Y: ${yPos}`;
-    debugInfo["Player Grid"] = `X: ${Math.floor(xPos / tileWidth)}, Y: ${Math.floor(yPos / tileHeight)}`;
+    debugInfo["Player Grid"] = `X: ${Math.round(xPos / tileWidth) + 1}, Y: ${Math.round(yPos / tileHeight) + 1}`;
     debugInfo["Player Corner Grid"] = `X: ${Math.floor((xPos + playerWidth - 1) / tileWidth)}, Y: ${Math.floor((yPos + playerHeight - 1) / tileHeight)}`;
     debugInfo["Current Direction"] = currentDirection;
     debugInfo["Last Direction"] = lastDirection;
