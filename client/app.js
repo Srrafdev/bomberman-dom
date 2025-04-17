@@ -34,7 +34,86 @@ function updateDebugInfo(info) {
     .join('');
 }
 
-function Home(rows = 11, columns = 15) {
+function Game() {
+  let rows = 11;
+  let columns = 15;
+  let por = [10, 11, 11, 11, 11, 11, 11, 11, 11, 11]
+
+  let map = [
+    [2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4],
+    [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6],
+    [5, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 6],
+    [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6],
+    [5, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 6],
+    [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6],
+    [5, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 6],
+    [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6],
+    [5, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 6],
+    [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6],
+    [7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9],
+  ];
+
+  function mpbuild() {
+    for (let row = 0; row < map.length; row++) {
+      for (let col = 0; col < map[row].length; col++) {
+        const positionPlayrs = [
+          [1, 1], //p1
+          [1, 2],
+          [2, 1],
+          [1, 13],// p2
+          [1, 12],
+          [2, 13],
+          [9, 1], // p3
+          [8, 1],
+          [9, 2],
+          [9, 13], //p4
+          [8, 13],
+          [9, 12]
+        ];
+
+        if (positionPlayrs.some(([r, c]) => r === row && c === col)) {
+          map[row][col] = 11
+
+        } else if (map[row][col] === 0) {
+          let random = Math.round(Math.random() * (9 - 0) + 0);
+          map[row][col] = por[random]
+        }
+      }
+    }
+  }
+  mpbuild()
+
+  function draw() {
+    let tiles = []
+    for (let row = 0; row < map.length; row++) {
+      for (let col = 0; col < map[row].length; col++) {
+        const tileValue = map[row][col];
+        const tileClasses = {
+          1: "toba",
+          2: "topLeft",
+          3: "top",
+          4: "topRight",
+          5: "left",
+          6: "right",
+          7: "downLeft",
+          8: "down",
+          9: "downRight",
+          10: "tree",
+          11: "grass",
+          12: "box"
+        };
+        const className = tileClasses[tileValue];
+        tiles.push(vdm("div", {
+          class: `tile ${className ?? ""}`,
+          "data-row": row,
+          "data-col": col,
+          id: className ?? "",
+        }))
+      }
+    }
+    return tiles
+  }
+
   const contanerRef = (container) => {
     const containerWidth = window.innerWidth
     const containerHeight = window.innerHeight;
@@ -48,11 +127,7 @@ function Home(rows = 11, columns = 15) {
     container.style.gridTemplateColumns = `repeat(${columns}, ${tileSize}px)`;
   }
 
-  const mapData = [10, 11, 11, 11, 11, 11, 11, 11, 11, 11];
-  const tileMap = new TileMap(mapData);
-  const tiles = tileMap.draw()
-
-  return vdm("div", {}, vdm("div", { id: "game-container", ref: contanerRef }, ...tiles), CurrPlayer())
+  return vdm("div", {}, vdm("div", { id: "game-container", ref: contanerRef }, ...draw()), CurrPlayer())
 }
 
 // -------------------------- yassine
@@ -368,7 +443,7 @@ function CurrPlayer() {
 router
   .add("/", NewUserPage)
   .add("/waiting", waitingChattingPage)
-  .add("/game", Home)
+  .add("/game", Game)
 
 router.setNotFound(() =>
   vdm("div", {},
