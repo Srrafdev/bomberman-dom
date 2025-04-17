@@ -209,7 +209,7 @@ function setRoutes(routes) {
 
 // ------------------ Global State Management ------------------
 
-const StateManagement = {
+const StateManagementLSG = {
   state: JSON.parse(localStorage.getItem("myState")) || {},
   listeners: [],
 
@@ -253,53 +253,53 @@ const StateManagement = {
     };
   }
 };
-// const StateManagement = {
-//   state: {}, // Initial empty state
-//   component: null, // Store the component to re-render
+const StateManagement = {
+  state: {}, // Initial empty state
+  component: null, // Store the component to re-render
 
-//   get() {
-//     return this.state;
-//   },
+  get() {
+    return this.state;
+  },
 
-//   set(newState) {
-//     if (newState !== this.state) {
-//       haveNewState = true;
-//     }
-//     this.state = { ...this.state, ...newState };
+  set(newState) {
+    if (newState !== this.state) {
+      haveNewState = true;
+    }
+    this.state = { ...this.state, ...newState };
 
-//     // Re-render component if we have a state change
-//     if (haveNewState && this.component) {
-//       renderComponent(this.component);
-//     }
-//   },
+    // Re-render component if we have a state change
+    if (haveNewState && this.component) {
+      renderComponent(this.component);
+    }
+  },
 
-//   delete(key) {
-//     if (this.state.hasOwnProperty(key)) {
-//       delete this.state[key];
-//       haveNewState = true;
+  delete(key) {
+    if (this.state.hasOwnProperty(key)) {
+      delete this.state[key];
+      haveNewState = true;
 
-//       // Re-render component if we have a state change
-//       if (this.component) {
-//         renderComponent(this.component);
-//       }
-//     }
-//   },
+      // Re-render component if we have a state change
+      if (this.component) {
+        renderComponent(this.component);
+      }
+    }
+  },
 
-//   reset() {
-//     this.state = {};
-//     haveNewState = true;
+  reset() {
+    this.state = {};
+    haveNewState = true;
 
-//     // Re-render component if we have a state change
-//     if (this.component) {
-//       renderComponent(this.component);
-//     }
-//   },
+    // Re-render component if we have a state change
+    if (this.component) {
+      renderComponent(this.component);
+    }
+  },
 
-//   // Method to set the component that should be re-rendered on state changes
-//   setComponent(component) {
-//     this.component = component;
-//   }
-// };
+  // Method to set the component that should be re-rendered on state changes
+  setComponent(component) {
+    this.component = component;
+  }
+};
 
 
 // ------------------ Event System ------------------
@@ -410,6 +410,41 @@ class Router {
   }
 }
 
+let state = [];
+let stateIndex = 0;
+let effects = [];
+let effectIndex = 0;
+
+function useState(initialValue) {
+  const index = stateIndex
+  if (!state[index]) {
+    state[index] = initialValue
+  }
+  const setState = (newValue) => {
+    state[index] = newValue
+    console.log(currentComponent);
+    console.log(newValue);
+    renderComponent(() => currentComponent)
+  };
+  stateIndex++
+
+  return [state[index], setState]
+}
+
+function useEffect(callback, dependencies) {
+  const oldDependencies = effects[effectIndex]
+  let hasChanged = true
+
+  if (oldDependencies) {
+    hasChanged = dependencies.some((dep, i) => !Object.is(dep, oldDependencies[i]));
+  }
+  if (hasChanged) {
+    callback()
+  }
+  effects[effectIndex] = dependencies
+  effectIndex++
+}
+
 export {
   vdm,
   setRoutes,
@@ -417,5 +452,7 @@ export {
   StateManagement,
   EventSystem,
   Router,
-  renderComponent
+  renderComponent,
+  useState,
+  useEffect
 };

@@ -18,6 +18,7 @@ const routes = {
   DELETE: {},
 };
 
+const witeTime = 1
 
 const mimeTypes = {
   '.html': 'text/html',
@@ -34,7 +35,7 @@ const __dirname = dirname(__filename);
 const baseDir = path.join(__dirname, 'client');
 const indexPath = path.join(baseDir, 'index.html');
 function handleRequest(req, res) {
-  if (req.url === "/waiting" || req.url === "/game" ) {
+  if (req.url === "/waiting" || req.url === "/game") {
     console.log("redirecting")
     res.writeHead(302, { Location: '/' });
     res.end();
@@ -86,63 +87,128 @@ wss.on("connection", (ws) => {
   // Handle nickname input (sent by the client)
   ws.on("message", (message) => {
     const data = JSON.parse(message);
-const wsFuncton = {
-  
-}
-    if (data.type === "set_nickname") {
-      nickname = data.nickname;
-      ws.nickname = nickname;
+    const WsHandelType = {
+      "set_nickname": function () {
+        nickname = data.nickname;
+        ws.nickname = nickname;
 
-      // Check for available room or create a new room
-      roomID = findAvailableRoom();
-      if (!roomID) {
-        console.log("create room")
-        roomID = `room-${Date.now()}`;
-        rooms[roomID] = {
-          players: [nickname],
-          state: "waiting",
-          timer: 5,
-        };
-      } else {
-        rooms[roomID].players.push(nickname);
-        if (rooms[roomID].players.length === 4) {
-          rooms[roomID].state = "locked"; // Room is locked when full
+        // Check for available room or create a new room
+        roomID = findAvailableRoom();
+        if (!roomID) {
+          console.log("create room")
+          roomID = `room-${Date.now()}`;
+          rooms[roomID] = {
+            players: [nickname],
+            state: "waiting",
+            timer: witeTime,
+          };
+        } else {
+          rooms[roomID].players.push(nickname);
+          if (rooms[roomID].players.length === 4) {
+            rooms[roomID].state = "locked"; // Room is locked when full
+          }
         }
-      }
 
-      // need more logic
-      // for player if he exit
-      if (rooms[roomID].players.length === 2) {
-        startRoomCountdown(roomID);
-      }
+        // need more logic
+        // for player if he exit
+        if (rooms[roomID].players.length === 2) {
+          startRoomCountdown(roomID);
+        }
 
-      // Notify the player about the room
-      ws.send(
-        JSON.stringify({
-          type: "room_info",
-          roomID: roomID,
+        // Notify the player about the room
+        ws.send(
+          JSON.stringify({
+            type: "room_info",
+            roomID: roomID,
+            players: rooms[roomID].players,
+          })
+        );
+
+        // Broadcast new player join to the room
+        broadcastToRoom(roomID, {
+          type: "new_player",
+          nickname: nickname,
           players: rooms[roomID].players,
+          state: rooms[roomID].state,
+        });
+
+      },
+      "chat": function () {
+        console.log(nickname)
+        broadcastToRoom(roomID, {
+          type: "chat",
+          message: data.message,
+          nickname: nickname,
+        });
+      },
+      "creat_map": function () {
+        let rows = 11;
+        let columns = 15;
+        let por = [10, 11, 11, 11, 11, 11, 11, 11, 11, 11]
+
+        let map = [
+          [2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4],
+          [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6],
+          [5, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 6],
+          [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6],
+          [5, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 6],
+          [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6],
+          [5, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 6],
+          [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6],
+          [5, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 6],
+          [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6],
+          [7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9],
+        ];
+
+        function mpbuild() {
+          for (let row = 0; row < map.length; row++) {
+            for (let col = 0; col < map[row].length; col++) {
+              const positionPlayrs = [
+                [1, 1], //p1
+                [1, 2],
+                [2, 1],
+                [1, 13],// p2
+                [1, 12],
+                [2, 13],
+                [9, 1], // p3
+                [8, 1],
+                [9, 2],
+                [9, 13], //p4
+                [8, 13],
+                [9, 12]
+              ];
+
+              if (positionPlayrs.some(([r, c]) => r === row && c === col)) {
+                map[row][col] = 11
+
+              } else if (map[row][col] === 0) {
+                let random = Math.round(Math.random() * 9);
+                map[row][col] = por[random]
+              }
+            }
+          }
+        }
+        mpbuild()
+        broadcastToRoom(roomID, {
+          type: "map_Generet",
+          players: {
+            [rooms[roomID].players[0]]: [1, 1],
+            [rooms[roomID].players[1]]: [1, 13],
+            [rooms[roomID].players[1]]: [9, 1],
+            [rooms[roomID].players[1]]: [9, 12],
+
+          },
+          map: map,
+          rows: rows,
+          columns: columns,
+          por: por,
         })
-      );
-
-      // Broadcast new player join to the room
-      broadcastToRoom(roomID, {
-        type: "new_player",
-        nickname: nickname,
-        players: rooms[roomID].players,
-        state: rooms[roomID].state,
-      });
+      },
+      "player_moveng": function () {
+        broadcastToRoom(roomID, data, nickname)
+      }
     }
-
-    if (data.type === "chat") {
-      console.log(nickname)
-      broadcastToRoom(roomID, {
-        type: "chat",
-        message: data.message,
-        nickname: nickname,
-      });
-    }
-    //plqyer state
+    WsHandelType[data.type]?.()
   });
 
   // Handle WebSocket close event
@@ -183,7 +249,7 @@ function findAvailableRoom() {
   return null; // Return null if no available room
 }
 
-function broadcastToRoom(roomID, message) {
+function broadcastToRoom(roomID, message, name) {
   const room = rooms[roomID];
   if (room) {
     wss.clients.forEach((client) => {
@@ -191,7 +257,8 @@ function broadcastToRoom(roomID, message) {
         room.players.includes(client.nickname) &&
         client.readyState === WebSocket.OPEN
       ) {
-        client.send(JSON.stringify(message));
+        if (name !== client.nickname)
+          client.send(JSON.stringify(message));
       }
     });
   }
@@ -223,5 +290,5 @@ function startRoomCountdown(roomID) {
 
 // Make the server listen on port 5000
 server.listen(8080, () => {
-  console.log("Server is running on http://localhost:5000");
+  console.log("Server is running on http://localhost:8080");
 });
