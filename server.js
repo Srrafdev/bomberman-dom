@@ -77,6 +77,7 @@ let rooms = {
   // players: ["Alice", "Bob"],
   // state: "waiting",
   // timer: 20,
+  // usersConnection: [],
   // },
 };
 
@@ -101,6 +102,7 @@ wss.on("connection", (ws) => {
             players: [nickname],
             state: "waiting",
             timer: witeTime,
+            usersConnection: [],
           };
         } else {
           rooms[roomID].players.push(nickname);
@@ -108,6 +110,8 @@ wss.on("connection", (ws) => {
             rooms[roomID].state = "locked"; // Room is locked when full
           }
         }
+        ws.roomID = roomID;
+        rooms[roomID].usersConnection.push(ws);
 
         // need more logic
         // for player if he exit
@@ -251,17 +255,12 @@ function findAvailableRoom() {
 
 function broadcastToRoom(roomID, message, name) {
   const room = rooms[roomID];
-  if (room) {
-    wss.clients.forEach((client) => {
-      if (
-        room.players.includes(client.nickname) &&
-        client.readyState === WebSocket.OPEN
-      ) {
-        if (name !== client.nickname)
-          client.send(JSON.stringify(message));
-      }
-    });
-  }
+  if (!room) return;
+  room.usersConnection.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(message));
+    }
+  });
 }
 
 // Function to start the countdown for a room
