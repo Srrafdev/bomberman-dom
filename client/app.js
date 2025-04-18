@@ -177,7 +177,7 @@ function CurrPlayer() {
   let currentDirection = "idle";
   let isMoving = false;
   let lastDirection = "down";
-
+  let skipCorner = { x: 0, y: 0 };
   function initGame() {
     currPlayer = document.getElementById("current-player");
     const tileElement = document.querySelector('[data-row="1"][data-col="1"]');
@@ -186,6 +186,7 @@ function CurrPlayer() {
       return;
     }
     const tileRect = tileElement.getBoundingClientRect();
+    // debugInfo["Tile Rect"] = `Top: ${tileRect.top}, Left: ${tileRect.left}, Width: ${tileRect.width}, Height: ${tileRect.height}`;
     tileWidth = Math.round(tileRect.width);
     tileHeight = Math.round(tileRect.height);
     playerWidth = tileWidth - 5;
@@ -278,46 +279,125 @@ function CurrPlayer() {
     };
   }
 
-  function getPlayerGrid() {
-    return {
-      x: Math.round(xPos / tileWidth) + 1,
-      y: Math.round(yPos / tileHeight) + 1,
-    }
-  }
-
   function checkCorners(corners) {
-    // const tileInfo = getTileInfo(y, x)
-    // console.log(y, x, corners[0]);
     let cornerTiles = getPlayerTiles(corners[0].x, corners[0].y);
-    console.log(cornerTiles);
-    for (let index = 0; index < cornerTiles.corners.length; index++) {
-      console.log(cornerTiles.corners[index]);
-    }
-    debugInfo["corners--"] = cornerTiles.corners.map(corner => `(${corner.x}, ${corner.y})`).join(", ");
-    let playerGrid = getPlayerGrid();
-    // debugInfo["currentTiles"] = cornerTiles.uniqueTiles.map(tile => `(${tile.gridX + 1}, ${tile.gridY + 1})`).join(", "); 
-    debugInfo["Player Cordination"] = `X: ${playerGrid.x}, Y: ${playerGrid.y}`;
-    // console.log(cornerTiles.uniqueTiles);
-    for (let index = 0; index < cornerTiles.uniqueTiles.length; index++) {
-      console.log(cornerTiles.uniqueTiles[index]);
-    }
     let cornerTilesBool = cornerTiles.uniqueTiles.map(
       tile => getTileInfo(tile.gridX, tile.gridY)
     );
+    let direction = "";
+    let index = 0;
+    let cal = 0;
+    if (cornerTilesBool.length < 4) {
+      debugInfo["cornerTilesBool"] = ''
+      console.log("out");
+      return {
+        canMove: false,
+        skipCorner: null,
+        direction: "",
+        index: -1,
+      };
+    }
 
+    else {
+      for (let idx = 0; idx < cornerTilesBool.length; idx++) {
+        if (!cornerTilesBool[idx].walkable) {
+          cal++;
+          if (cal > 1) {
+            return {
+              canMove: false,
+              skipCorner: null,
+              direction: "",
+              index: -1,
+            }
+          }
+          index = idx;
+        }
+      }
+      if (index === 0) {
+        if (lastDirection == "left") {
+          skipCorner.y = cornerTiles.corners[0].y - (tileWidth * (cornerTiles.uniqueTiles[0].gridY + 1));
+          skipCorner.x = 3;
+          debugInfo["Corner tiles"] = cornerTiles.corners[0].y;
+          debugInfo["Corner uniqueTiles"] = (tileWidth * (cornerTiles.uniqueTiles[0].gridY + 1));
+          console.log(skipCorner);
+          console.log("left", index);
+          direction = "left";
+        } else if (lastDirection == "top") {
+          skipCorner.x = cornerTiles.corners[0].x - (tileWidth * (cornerTiles.uniqueTiles[0].gridX + 1));
+          skipCorner.y = 3;
+          debugInfo["Corner tiles"] = cornerTiles.corners[0].y;
+          debugInfo["Corner uniqueTiles"] = (tileWidth * (cornerTiles.uniqueTiles[0].gridY + 1));
+          console.log(skipCorner);
+          direction = "top";
+          console.log("top", index);
+        }
+      } else if (index === 1) {
+        if (lastDirection == "right") {
+          skipCorner.y = cornerTiles.corners[1].y - (tileWidth * (cornerTiles.uniqueTiles[1].gridY + 1));
+          skipCorner.x = 3;
+          debugInfo["Corner tiles"] = cornerTiles.corners[1].y;
+          debugInfo["Corner uniqueTiles"] = (tileWidth * (cornerTiles.uniqueTiles[1].gridY + 1));
+          console.log(skipCorner);
+          direction = "right";
+          console.log("right", index);
+        } else if (lastDirection == "top") {
+          skipCorner.x = cornerTiles.corners[1].x - (tileWidth * (cornerTiles.uniqueTiles[1].gridX)) + 1;
+          skipCorner.y = 3;
+          debugInfo["Corner tiles"] = cornerTiles.corners[1].y;
+          debugInfo["Corner uniqueTiles"] = (tileWidth * (cornerTiles.uniqueTiles[1].gridY + 1));
+          console.log(skipCorner);
+          direction = "top";
+          console.log("top", index);
+        }
+      } else if (index === 2) {
+        if (lastDirection == "left") {
+          skipCorner.x = 3;
+          skipCorner.y = cornerTiles.corners[2].y - (tileHeight * cornerTiles.uniqueTiles[2].gridY) + 1;
+          direction = "left";
+          console.log("left", index);
+        } else if (lastDirection == "down") {
+          skipCorner.x = cornerTiles.corners[2].x - (tileWidth * (cornerTiles.uniqueTiles[2].gridX + 1));
+          skipCorner.y = 3;
+          direction = "down";
+          console.log("down", index);
+        }
+      } else if (index === 3) {
+        if (lastDirection == "right") {
+          skipCorner.x = 3;
+          skipCorner.y = cornerTiles.corners[3].y - (tileHeight * cornerTiles.uniqueTiles[3].gridY) + 1;
+          debugInfo["Corner tiles"] = cornerTiles.corners[3].y;
+          debugInfo["Corner uniqueTiles"] = (tileHeight * cornerTiles.uniqueTiles[3].gridY);
+          console.log(skipCorner);
+          direction = "right";
+          console.log("right", index);
+        } else if (lastDirection == "down") {
+          skipCorner.x = cornerTiles.corners[3].x - (tileWidth * cornerTiles.uniqueTiles[3].gridX) + 1;
+          skipCorner.y = 3;
+          direction = "down";
+          console.log("down", index);
+        }
+      }
+    }
     debugInfo["cornerTilesBool"] = cornerTilesBool.map(info => info.walkable).join(", ");
-    // debugInfo["cornerTilesBool"] = cornerTiles.uniqueTiles.map(tile => `(${tile.gridY + 1}, ${tile.gridX + 1})`).join(", ");
-    // debugInfo["cornerTilesBool"] = tileInfo.map(info => info.walkable).join(", ");
-    // const tileValue = getPlayerTiles(y, x)
-    // debugInfo["cornerTilesValues"] = tileValue.map(info => info.uniqueTiles.map(tile => `(${tile.gridY + 1}, ${tile.gridX + 1})`).join(", ")).join(", ");
+    return {
+      canMove: false,
+      skipCorner,
+      direction,
+      index,
+    }
   }
 
   function canMove(newX, newY) {
+    let turnToDirection = {
+      canMove: false,
+      skipCorner: null,
+      direction: "",
+      index: -1,
+    };
     const tiles = getPlayerTiles(newX, newY);
     debugInfo["tiles"] = tiles.uniqueTiles.map(tile => `(${tile.gridX + 1}, ${tile.gridY + 1})`).join(", ");
     tiles.uniqueTiles.forEach((tile, index) => {
       const tileInfo = getTileInfo(tile.gridX, tile.gridY);
-      // console.log(tile.gridX, tile.gridY);
 
       debugInfo[`Tile ${index + 1}`] =
         `(${tile.gridX + 1}, ${tile.gridY + 1}) - Type: ${tileInfo.id || 'unknown'} - ${tileInfo.walkable ? 'walkable' : 'blocked'}`;
@@ -325,15 +405,51 @@ function CurrPlayer() {
     const canMove = tiles.uniqueTiles.every(tile => {
       const tileInfo = getTileInfo(tile.gridX, tile.gridY);
       if (tileInfo.walkable === false) {
-        // console.log(tiles.corners);
-        checkCorners(tiles.corners);
+        turnToDirection = checkCorners(tiles.corners);
       }
       return tileInfo.walkable;
     });
+    turnToDirection.canMove = canMove;
     debugInfo["Can Move"] = canMove ? "Yes" : "No";
-    return canMove;
+    return turnToDirection;
   }
 
+  function updateCornering(result) {
+    debugInfo["corner skipCorner x"] = result.skipCorner.x;
+    debugInfo["corner skipCorner y"] = result.skipCorner.y;
+    debugInfo["corner index"] = result.index;
+    debugInfo["corner direction"] = result.direction;
+    if (!result.skipCorner || result.direction === "") return;
+    const { skipCorner, direction, index } = result;
+    if (index === 0) {
+      if (direction === "left") {
+        yPos += Math.min(speedY, Math.abs(skipCorner.y));
+      } else if (direction === "top") {
+        xPos += Math.min(speedX, Math.abs(skipCorner.x));
+      }
+    }
+    else if (index === 1) {
+      if (direction === "right") {
+        yPos += Math.min(speedY, Math.abs(skipCorner.y));
+      } else if (direction === "top") {
+        xPos -= Math.min(speedX, Math.abs(skipCorner.x));
+      }
+    }
+    else if (index === 2) {
+      if (direction === "left") {
+        yPos -= Math.min(speedY, Math.abs(skipCorner.y));
+      } else if (direction === "down") {
+        xPos += Math.min(speedX, Math.abs(skipCorner.x));
+      }
+    }
+    else if (index === 3) {
+      if (direction === "right") {
+        yPos -= Math.min(speedY, Math.abs(skipCorner.y));
+      } else if (direction === "down") {
+        xPos -= Math.min(speedX, Math.abs(skipCorner.x));
+      }
+    }
+  }
   function updateDebugWithTiles() {
     const tiles = getPlayerTiles(xPos, yPos);
 
@@ -385,12 +501,17 @@ function CurrPlayer() {
       } else if (isMoving) {
         updatePlayerState("idle", lastDirection);
       }
-
       isMoving = moved;
-
-      if (newXPos !== xPos && canMove(newXPos, yPos)) xPos = newXPos;
-      if (newYPos !== yPos && canMove(xPos, newYPos)) yPos = newYPos;
-
+      if (newYPos !== yPos && canMove(xPos, newYPos).canMove) yPos = newYPos
+      else if ((canMove(xPos, newYPos).direction !== "" && canMove(xPos, newYPos).canMove === false)) {
+        console.log(canMove(xPos, newYPos));
+        updateCornering(canMove(xPos, newYPos));
+      } else if (newXPos !== xPos && canMove(newXPos, yPos).canMove) xPos = newXPos;
+      else if (canMove(newXPos, yPos).direction !== "" && canMove(newXPos, yPos).canMove === false) {
+        console.log("test flage");
+        updateCornering(canMove(newXPos, yPos));
+      }
+      debugInfo["position final"] = `(${xPos}px, ${yPos}px)`
       currPlayer.style.transform = `translate(${xPos}px, ${yPos}px)`;
 
       updateDebugWithTiles();
