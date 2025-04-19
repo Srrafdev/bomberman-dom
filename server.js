@@ -18,7 +18,7 @@ const routes = {
   DELETE: {},
 };
 
-const witeTime = 1
+const witeTime = 20; // seconds
 
 const mimeTypes = {
   '.html': 'text/html',
@@ -77,7 +77,7 @@ let rooms = {
   // players: ["Alice", "Bob"],
   // state: "waiting",
   // timer: 20,
-  // usersConnection: {},
+  // usersConnection: ,
   // },
 };
 
@@ -102,7 +102,7 @@ wss.on("connection", (ws) => {
             players: [nickname],
             state: "waiting",
             timer: witeTime,
-            usersConnection: {},
+            usersConnection: new Map(),
           };
         } else {
           rooms[roomID].players.push(nickname);
@@ -111,7 +111,7 @@ wss.on("connection", (ws) => {
           }
         }
         ws.roomID = roomID;
-        rooms[roomID].usersConnection[ws] = nickname;
+        rooms[roomID].usersConnection.set(ws, nickname);
 
         // need more logic
         // for player if he exit
@@ -138,7 +138,6 @@ wss.on("connection", (ws) => {
 
       },
       "chat": function () {
-        console.log(nickname)
         broadcastToRoom(roomID, {
           type: "chat",
           message: data.message,
@@ -253,20 +252,17 @@ function findAvailableRoom() {
   return null; // Return null if no available room
 }
 
-function broadcastToRoom(roomID, message, name) {
+function broadcastToRoom(roomID, message) {
   const room = rooms[roomID];
   if (!room) return;
-  for (let client of Object.keys(room.usersConnection)) {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(
-        JSON.stringify({
-          ...message,
-          name: name,
-        })
-      );
+
+  for (let [ws, username] of room.usersConnection.entries()) {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(message));
     }
   }
 }
+
 
 // Function to start the countdown for a room
 function startRoomCountdown(roomID) {
