@@ -94,7 +94,7 @@ wss.on("connection", (ws) => {
         ws.nickname = nickname;
 
         // Check for available room or create a new room
-        roomID = findAvailableRoom();
+        roomID = findAvailableRoom(nickname);
         if (!roomID) {
           console.log("create room")
           roomID = `room-${Date.now()}`;
@@ -243,9 +243,9 @@ wss.on("connection", (ws) => {
 });
 
 // Helper function to find an available room
-function findAvailableRoom() {
+function findAvailableRoom(nickname) {
   for (let id in rooms) {
-    if (rooms[id].state === "waiting" && rooms[id].players.length < 4) {
+    if (rooms[id].state === "waiting" && rooms[id].players.length < 4 && !([...rooms[id].usersConnection.values()].includes(nickname))) {
       return id; // Return room ID if there is space
     }
   }
