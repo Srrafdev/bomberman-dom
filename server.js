@@ -18,7 +18,7 @@ const routes = {
   DELETE: {},
 };
 
-const witeTime = 1
+const witeTime = 1; // seconds
 
 const mimeTypes = {
   '.html': 'text/html',
@@ -77,13 +77,29 @@ let rooms = {
   // players: ["Alice", "Bob"],
   // state: "waiting",
   // timer: 20,
+  // usersConnection: ,
   // },
 };
+
+// let player = {
+//   id: "asdasdasd",
+//   nickname: "asda",
+//   direction: "adasd",
+//   x: 41,
+//   y:54,
+// }
+const players = new Map()
+function PrintClient() {
+  for (let [key, value] of clients) {
+    console.log(key, "=>", value.nickname, " / ", value.roomID);
+  }
+  console.log("-----------------------------------");
+}
 
 wss.on("connection", (ws) => {
   let nickname = null;
   let roomID = null;
-
+  let uid = null
   // Handle nickname input (sent by the client)
   ws.on("message", (message) => {
     const data = JSON.parse(message);
@@ -91,7 +107,8 @@ wss.on("connection", (ws) => {
       "set_nickname": function () {
         nickname = data.nickname;
         ws.nickname = nickname;
-
+        uid = uuid()
+        ws.uid = uid
         // Check for available room or create a new room
         roomID = findAvailableRoom();
         if (!roomID) {
@@ -99,16 +116,23 @@ wss.on("connection", (ws) => {
           roomID = `room-${Date.now()}`;
           rooms[roomID] = {
             players: [nickname],
+            uids: [uid],
             state: "waiting",
             timer: witeTime,
+            usersConnection: new Map(),
           };
         } else {
           rooms[roomID].players.push(nickname);
+          rooms[roomID].uids.push(uid);
           if (rooms[roomID].players.length === 4) {
             rooms[roomID].state = "locked"; // Room is locked when full
           }
         }
+        ws.roomID = roomID;
+        rooms[roomID].usersConnection.set(ws, nickname);
 
+        // clients.set(uuid(), ws)
+        // PrintClient()
         // need more logic
         // for player if he exit
         if (rooms[roomID].players.length === 2) {
@@ -131,10 +155,8 @@ wss.on("connection", (ws) => {
           players: rooms[roomID].players,
           state: rooms[roomID].state,
         });
-
       },
       "chat": function () {
-        console.log(nickname)
         broadcastToRoom(roomID, {
           type: "chat",
           message: data.message,
@@ -159,7 +181,12 @@ wss.on("connection", (ws) => {
           [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6],
           [7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9],
         ];
-
+        let defaultPosit = {
+          0: [1, 1],
+          1: [1, 13],
+          2: [9, 1],
+          3: [9, 13],
+        }
         function mpbuild() {
           for (let row = 0; row < map.length; row++) {
             for (let col = 0; col < map[row].length; col++) {
@@ -189,14 +216,15 @@ wss.on("connection", (ws) => {
           }
         }
         mpbuild()
+        // let ids = findClinetInRoom(roomID)
+
         broadcastToRoom(roomID, {
           type: "map_Generet",
           players: {
-            [rooms[roomID].players[0]]: [1, 1],
-            [rooms[roomID].players[1]]: [1, 13],
-            [rooms[roomID].players[1]]: [9, 1],
-            [rooms[roomID].players[1]]: [9, 12],
-
+            [rooms[roomID].uids[0]]: defaultPosit[0],
+            [rooms[roomID].uids[1]]: defaultPosit[1],
+            [rooms[roomID].uids[2] ?? "unknow"]: defaultPosit[2],
+            [rooms[roomID].uids[3] ?? "unknow"]: defaultPosit[3],
           },
           map: map,
           rows: rows,
@@ -239,6 +267,16 @@ wss.on("connection", (ws) => {
   });
 });
 
+
+function findClinetInRoom(rID) {
+  let res = []
+  for (let [key, value] of clients) {
+    if (value.roomID === rID) {
+      res.push(key)
+    }
+  }
+  return res
+}
 // Helper function to find an available room
 function findAvailableRoom() {
   for (let id in rooms) {
@@ -249,20 +287,17 @@ function findAvailableRoom() {
   return null; // Return null if no available room
 }
 
-function broadcastToRoom(roomID, message, name) {
+function broadcastToRoom(roomID, message) {
   const room = rooms[roomID];
-  if (room) {
-    wss.clients.forEach((client) => {
-      if (
-        room.players.includes(client.nickname) &&
-        client.readyState === WebSocket.OPEN
-      ) {
-        if (name !== client.nickname)
-          client.send(JSON.stringify(message));
-      }
-    });
+  if (!room) return;
+
+  for (let [ws, username] of room.usersConnection.entries()) {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(message));
+    }
   }
 }
+
 
 // Function to start the countdown for a room
 function startRoomCountdown(roomID) {
@@ -286,6 +321,13 @@ function startRoomCountdown(roomID) {
     }
   }, 1000);
   rooms[roomID].countdownInterval = countdownInterval;
+}
+
+function uuid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
 }
 
 // Make the server listen on port 5000

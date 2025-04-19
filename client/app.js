@@ -1,13 +1,12 @@
 import { waitingChattingPage } from "./htmls.js";
-import { EventSystem, Router, setRoot, useEffect, useState } from "./miniframework.js";
+import { EventSystem, Router, setRoot } from "./miniframework.js";
 import { renderComponent } from "./miniframework.js";
 import { vdm } from "./miniframework.js";
 
 setRoot("app")
 const router = new Router(renderComponent)
 export { room, left_time, sendMessage, messages }
-// let MapState = null;
-const [MapState, setMapState] = useState(null)
+let MapState = null;
 function createDebugPanel() {
   const debugPanel = document.createElement('div');
   debugPanel.id = 'debug-panel';
@@ -36,7 +35,9 @@ function updateDebugInfo(info) {
 }
 
 function Game() {
+  console.log(MapState);
   if (!MapState) return vdm("div", {}, "loding map...")
+
 
   function draw() {
     let tiles = []
@@ -70,11 +71,6 @@ function Game() {
     return tiles
   }
 
-  useEffect(() => {
-    console.log("hhhhhhhhhhhhhhhhhhhhhhh", MapState);
-
-  }, [MapState])
-
   const contanerRef = (container) => {
     const containerWidth = window.innerWidth
     const containerHeight = window.innerHeight;
@@ -88,10 +84,17 @@ function Game() {
     container.style.gridTemplateColumns = `repeat(${MapState.columns}, ${tileSize}px)`;
   }
 
-  return vdm("div", {}, vdm("div", { id: "game-container", ref: contanerRef }, ...draw()), CurrPlayer())
+  let players = []
+  for (let [key, val] of Object.entries(MapState.players)) {
+    if (key !== "unknow") {
+      players.push(() => CurrPlayer(val))
+    }
+  }
+
+  return vdm("div", {}, vdm("div", { id: "game-container", ref: contanerRef }, ...draw()), CurrPlayer([1,1]))
 }
 
-// -------------------------- yassine
+// -------------------------- yassine -----------------------------------------
 let ws
 let room = {}
 let left_time = 20
@@ -155,9 +158,8 @@ function enter(event) {
       renderComponent(waitingChattingPage, false);
     }
     if (data.type === "map_Generet") {
-      // MapState = data
-      setMapState(data)
-      // renderComponent(Game)
+      MapState = data
+      renderComponent(Game)
     }
     if (data.type === "player_moveng") {
       console.log(data);
@@ -214,7 +216,7 @@ function EmotesCat(emoteNumber, message, random = true) {
     emoteNumber = Math.round(Math.random() * (13 - 1) + 1);
   }
   setanime()
-  if (random) setInterval(() => setanime(), 3000);
+  if (random) setInterval(() => setanime(), 5000);
 
   return (
     vdm("div", { class: "contaner_emotes" },
@@ -230,10 +232,10 @@ function EmotesCat(emoteNumber, message, random = true) {
 function backToHome(path) {
   return vdm("button", { onClick: () => router.link(path) }, `go to ${path}`)
 }
+
 let xPos = 0;
 let yPos = 0;
-
-function CurrPlayer() {
+function CurrPlayer(defPos) {
   let currPlayer;
   let keysPressed = {};
   let animationFrameId;
@@ -250,7 +252,7 @@ function CurrPlayer() {
 
   function initGame() {
     currPlayer = document.getElementById("current-player");
-    const tileElement = document.querySelector('[data-row="1"][data-col="1"]');
+    const tileElement = document.querySelector(`[data-row="${defPos[0]}"][data-col="${defPos[1]}"]`);
     if (!tileElement) {
       updateDebugInfo({ "Error": "Could not find initial tile for positioning" });
       return;

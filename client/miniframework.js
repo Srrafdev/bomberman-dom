@@ -410,40 +410,40 @@ class Router {
   }
 }
 
-let state = [];
-let stateIndex = 0;
-let effects = [];
-let effectIndex = 0;
+// let state = [];
+// let stateIndex = 0;
+// let effects = [];
+// let effectIndex = 0;
 
-function useState(initialValue) {
-  const index = stateIndex
-  if (!state[index]) {
-    state[index] = initialValue
-  }
-  const setState = (newValue) => {
-    state[index] = newValue
-    console.log(currentComponent);
-    console.log(newValue);
-    renderComponent(() => currentComponent)
-  };
-  stateIndex++
+// function useState(initialValue) {
+//   const index = stateIndex
+//   if (!state[index]) {
+//     state[index] = initialValue
+//   }
+//   const setState = (newValue, component) => {
+//     state[index] = newValue
+//     console.log("setState", component);
 
-  return [state[index], setState]
-}
+//     renderComponent(component)
+//   };
+//   stateIndex++
 
-function useEffect(callback, dependencies) {
-  const oldDependencies = effects[effectIndex]
-  let hasChanged = true
+//   return [state[index], setState]
+// }
 
-  if (oldDependencies) {
-    hasChanged = dependencies.some((dep, i) => !Object.is(dep, oldDependencies[i]));
-  }
-  if (hasChanged) {
-    callback()
-  }
-  effects[effectIndex] = dependencies
-  effectIndex++
-}
+// function useEffect(callback, dependencies) {
+//   const oldDependencies = effects[effectIndex]
+//   let hasChanged = true
+
+//   if (oldDependencies) {
+//     hasChanged = dependencies.some((dep, i) => !Object.is(dep, oldDependencies[i]));
+//   }
+//   if (hasChanged) {
+//     callback()
+//   }
+//   effects[effectIndex] = dependencies
+//   effectIndex++
+// }
 
 export {
   vdm,
@@ -453,6 +453,4 @@ export {
   EventSystem,
   Router,
   renderComponent,
-  useState,
-  useEffect
 };
